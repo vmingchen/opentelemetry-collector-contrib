@@ -1,0 +1,11 @@
+Schedules:
+    - InclusionPatterns:
+          - StartsWith: "*"
+      ExclusionPatterns:
+          - Equals: "woot"
+          - Equals: "wowowow"
+      Period: "MIN_5"
+
+    - InclusionPatterns:
+          - Equals: "woot/woot/woot"
+      Period: "DAY_7"
