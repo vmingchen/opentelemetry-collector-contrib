@@ -81,6 +81,9 @@ func hashConfig(obj *MetricConfig) []byte {
 }
 
 func (backend *LocalConfigBackend) GetFingerprint() []byte {
+	backend.Lock()
+	defer backend.Unlock()
+
 	fingerprint := make([]byte, len(backend.fingerprint))
 	copy(fingerprint, backend.fingerprint)
 	return fingerprint

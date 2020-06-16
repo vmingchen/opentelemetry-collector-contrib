@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dynamicconfigextension
+package dynamicconfig
 
 import (
 	"context"
@@ -44,8 +44,7 @@ func TestFactory_CreateDefaultConfig(t *testing.T) {
 		},
 		Endpoint:        "localhost:55700",
 		LocalConfigFile: "dynamic-config-local-schedules.yaml",
-	},
-		cfg)
+	}, cfg)
 
 	assert.NoError(t, configcheck.ValidateConfig(cfg))
 	ext, err := factory.CreateExtension(context.Background(), component.ExtensionCreateParams{Logger: zap.NewNop()}, cfg)

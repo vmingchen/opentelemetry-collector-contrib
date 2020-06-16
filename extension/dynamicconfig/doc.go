@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package dynamicconfigextension implements an extension that enables dynamically
+// Package dynamicconfig implements an extension that enables dynamically
 // configuring metric collection schedule, trace parameters, and other
 // tunable knobs on an instrumented system.
-package dynamicconfigextension
+package dynamicconfig

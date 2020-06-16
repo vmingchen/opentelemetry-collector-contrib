@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dynamicconfigextension
+package dynamicconfig
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfigextension/service"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service"
 )
 
 type dynamicConfigExtension struct {
