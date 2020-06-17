@@ -50,3 +50,30 @@ func (schedule *Schedule) Proto() *pb.ConfigResponse_MetricConfig_Schedule {
 
 	return proto
 }
+
+func (schedule *Schedule) Hash() []byte {
+	incHashes := make([][]byte, len(schedule.InclusionPatterns))
+	excHashes := make([][]byte, len(schedule.ExclusionPatterns))
+
+	for i, incPat := range schedule.InclusionPatterns {
+		incHashes[i] = incPat.Hash()
+	}
+
+	for i, excPat := range schedule.ExclusionPatterns {
+		excHashes[i] = excPat.Hash()
+	}
+
+	hashes := [][]byte{
+		combineHash(incHashes),
+		combineHash(excHashes),
+		schedule.Period.Hash(),
+		schedule.Metadata,
+	}
+
+	hasher.Reset()
+	for _, val := range hashes {
+		hasher.Write(val)
+	}
+
+	return hasher.Sum(nil)
+}

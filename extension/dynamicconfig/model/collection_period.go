@@ -28,3 +28,10 @@ func (period CollectionPeriod) Proto() pb.ConfigResponse_MetricConfig_Schedule_C
 	interval := pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod_value[string(period)]
 	return pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod(interval)
 }
+
+func (period CollectionPeriod) Hash() []byte {
+	hasher.Reset()
+	hasher.Write([]byte(period))
+	return hasher.Sum(nil)
+
+}

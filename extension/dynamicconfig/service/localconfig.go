@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/collector/config"
 
-	"github.com/vmingchen/opentelemetry-collector-contrib/extension/dynamicconfig/model"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/model"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -73,13 +73,14 @@ func (backend *LocalConfigBackend) updateConfig() error {
 
 	backend.MetricConfig = &metricConfig
 	backend.fingerprint = hashConfig(&metricConfig)
+
+	fmt.Println("New config:", backend.MetricConfig)
+	fmt.Println("fingerprint:", backend.fingerprint)
 	return nil
 }
 
-// TODO: implement hash for config
 func hashConfig(obj *model.MetricConfig) []byte {
-	// return obj.Hash()
-	return nil
+	return obj.Hash()
 }
 
 func (backend *LocalConfigBackend) GetFingerprint() []byte {

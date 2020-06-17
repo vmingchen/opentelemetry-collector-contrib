@@ -19,34 +19,29 @@
 package model
 
 import (
-    "fmt"
-    "hash"
-    "hash/fnv"
+	"fmt"
+	"hash"
+	"hash/fnv"
 )
 
 var hasher hash.Hash = fnv.New64a()
 
-type Hashable interface {
-    Hash() []byte
-}
+func combineHash(chunks [][]byte) []byte {
+	if len(chunks) == 0 {
+		return nil
+	}
 
-func combineHash(chunks []Hashable) []byte {
-    if len(chunks) == 0 {
-        return nil
-    }
+	totalHash := chunks[0]
+	for _, chunk := range chunks[1:] {
+		if len(totalHash) != len(chunk) {
+			panic(fmt.Sprintf("length mismatch: len(%v) != len(%v)",
+				totalHash, chunk))
+		}
 
-    totalHash := chunks[0].Hash()
-    for _, chunk := range chunks[1:] {
-        chunkHash := chunk.Hash()
-        if len(totalHash) != len(chunkHash) {
-            panic(fmt.Sprintf("length mismatch: len(%v) != len(%v)",
-                totalHash, chunkHash))
-        }
+		for i, val := range chunk {
+			totalHash[i] ^= val
+		}
+	}
 
-        for i, val := range chunkHash {
-            totalHash[i] ^= val
-        }
-    }
-
-    return totalHash
+	return totalHash
 }

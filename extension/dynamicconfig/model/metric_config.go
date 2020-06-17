@@ -38,3 +38,12 @@ func (config *MetricConfig) Proto() *pb.ConfigResponse_MetricConfig {
 
 	return proto
 }
+
+func (config *MetricConfig) Hash() []byte {
+	hashes := make([][]byte, len(config.Schedules))
+	for i, sched := range config.Schedules {
+		hashes[i] = sched.Hash()
+	}
+
+	return combineHash(hashes)
+}
