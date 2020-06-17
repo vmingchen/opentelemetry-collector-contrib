@@ -16,36 +16,11 @@
 // Proto() methods convert the model representation to a usable struct for
 // protobuf marshalling.
 
-package service
+package model
 
 import (
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
-
-// ConfigBackend defines a general backend that the service can read
-// configuration data from.
-type ConfigBackend interface {
-	GetFingerprint() []byte
-	IsSameFingerprint(fingerprint []byte) bool
-	BuildConfigResponse() *pb.ConfigResponse
-}
-
-type MetricConfig struct {
-	Schedules []Schedule
-}
-
-func (config *MetricConfig) Proto() *pb.ConfigResponse_MetricConfig {
-	scheduleSlice := make([]*pb.ConfigResponse_MetricConfig_Schedule, len(config.Schedules))
-	for i, schedule := range config.Schedules {
-		scheduleSlice[i] = schedule.Proto()
-	}
-
-	proto := &pb.ConfigResponse_MetricConfig{
-		Schedules: scheduleSlice,
-	}
-
-	return proto
-}
 
 type Schedule struct {
 	InclusionPatterns []Pattern
@@ -74,32 +49,4 @@ func (schedule *Schedule) Proto() *pb.ConfigResponse_MetricConfig_Schedule {
 	}
 
 	return proto
-}
-
-type Pattern struct {
-	Equals     string
-	StartsWith string
-}
-
-func (p *Pattern) Proto() *pb.ConfigResponse_MetricConfig_Schedule_Pattern {
-	if len(p.Equals) > 0 {
-		return &pb.ConfigResponse_MetricConfig_Schedule_Pattern{
-			Match: &pb.ConfigResponse_MetricConfig_Schedule_Pattern_Equals{
-				Equals: p.Equals,
-			},
-		}
-	} else {
-		return &pb.ConfigResponse_MetricConfig_Schedule_Pattern{
-			Match: &pb.ConfigResponse_MetricConfig_Schedule_Pattern_StartsWith{
-				StartsWith: p.StartsWith,
-			},
-		}
-	}
-}
-
-type CollectionPeriod string
-
-func (period CollectionPeriod) Proto() pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod {
-	interval := pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod_value[string(period)]
-	return pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod(interval)
 }

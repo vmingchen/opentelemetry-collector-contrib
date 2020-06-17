@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/collector/config"
 
+	"github.com/vmingchen/opentelemetry-collector-contrib/extension/dynamicconfig/model"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -31,7 +32,7 @@ import (
 // reflect immediately in the configs.
 type LocalConfigBackend struct {
 	viper        *viper.Viper
-	MetricConfig *MetricConfig
+	MetricConfig *model.MetricConfig
 	fingerprint  []byte
 	waitTime     int32
 
@@ -62,7 +63,7 @@ func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 }
 
 func (backend *LocalConfigBackend) updateConfig() error {
-	var metricConfig MetricConfig
+	var metricConfig model.MetricConfig
 	if err := backend.viper.UnmarshalExact(&metricConfig); err != nil {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
 	}
@@ -76,7 +77,8 @@ func (backend *LocalConfigBackend) updateConfig() error {
 }
 
 // TODO: implement hash for config
-func hashConfig(obj *MetricConfig) []byte {
+func hashConfig(obj *model.MetricConfig) []byte {
+	// return obj.Hash()
 	return nil
 }
 

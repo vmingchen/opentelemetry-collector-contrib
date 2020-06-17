@@ -21,6 +21,14 @@ import (
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
+// ConfigBackend defines a general backend that the service can read
+// configuration data from.
+type ConfigBackend interface {
+	GetFingerprint() []byte
+	IsSameFingerprint(fingerprint []byte) bool
+	BuildConfigResponse() *pb.ConfigResponse
+}
+
 // ConfigService implements the server side of the gRPC service for config
 // updates.
 type ConfigService struct {
