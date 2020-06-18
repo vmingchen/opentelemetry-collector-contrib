@@ -1,0 +1,7 @@
+Schedules:
+    - InclusionPatterns:
+          - Woot: "*"
+      ExclusionPatterns:
+          - Equals: "woot"
+          - Equals: "wowowow"
+      Period: "MIN_5"

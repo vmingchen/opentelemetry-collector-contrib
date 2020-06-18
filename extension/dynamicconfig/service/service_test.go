@@ -45,10 +45,6 @@ func withMockConfig() Option {
 	}
 }
 
-// var mockService = ConfigService{
-//     backend: &mockBackend{}
-// }
-
 func TestNewConfigService(t *testing.T) {
 	if service, err := NewConfigService(); service != nil || err == nil {
 		t.Errorf("no backend specified but service created: %v: %v", service, err)

@@ -17,6 +17,7 @@ package service
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -36,6 +37,7 @@ type LocalConfigBackend struct {
 	fingerprint  []byte
 	waitTime     int32
 
+	updateCh	 chan struct{}   // syncs updates; meant for testing
 	sync.Mutex
 }
 
@@ -56,7 +58,13 @@ func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 
 	backend.viper.WatchConfig()
 	backend.viper.OnConfigChange(func(e fsnotify.Event) {
-		backend.updateConfig()
+		if err := backend.updateConfig(); err != nil {
+			log.Printf("failed to update configs: %v", err)
+		}
+
+		if backend.updateCh != nil {
+			backend.updateCh <- struct{}{}
+		}
 	})
 
 	return backend, nil
