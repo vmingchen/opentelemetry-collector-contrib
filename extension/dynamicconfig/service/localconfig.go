@@ -42,7 +42,7 @@ type LocalConfigBackend struct {
 func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 	backend := &LocalConfigBackend{
 		viper:    config.NewViper(),
-		waitTime: 5, // TODO: need more refined strategy for setting this
+		waitTime: 30, // TODO: need more refined strategy for setting this
 	}
 	backend.viper.SetConfigFile(configFile)
 
@@ -74,8 +74,6 @@ func (backend *LocalConfigBackend) updateConfig() error {
 	backend.MetricConfig = &metricConfig
 	backend.fingerprint = hashConfig(&metricConfig)
 
-	fmt.Println("New config:", backend.MetricConfig)
-	fmt.Println("fingerprint:", backend.fingerprint)
 	return nil
 }
 
