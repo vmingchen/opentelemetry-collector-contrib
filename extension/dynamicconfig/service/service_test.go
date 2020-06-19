@@ -30,10 +30,6 @@ func (mock *mockBackend) GetFingerprint() []byte {
 	return []byte(mockFingerprint)
 }
 
-func (mock *mockBackend) IsSameFingerprint(fingerprint []byte) bool {
-	return bytes.Equal(fingerprint, mockFingerprint)
-}
-
 func (mock *mockBackend) BuildConfigResponse() *pb.ConfigResponse {
 	return &pb.ConfigResponse{}
 }

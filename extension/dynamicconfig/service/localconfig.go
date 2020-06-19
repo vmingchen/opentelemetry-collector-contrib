@@ -15,7 +15,6 @@
 package service
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"sync"
@@ -33,7 +32,7 @@ import (
 // reflect immediately in the configs.
 type LocalConfigBackend struct {
 	viper        *viper.Viper
-	MetricConfig *model.MetricConfig
+	metricConfig *model.MetricConfig
 	fingerprint  []byte
 	waitTime     int32
 
@@ -71,16 +70,16 @@ func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 }
 
 func (backend *LocalConfigBackend) updateConfig() error {
-	var metricConfig model.MetricConfig
-	if err := backend.viper.UnmarshalExact(&metricConfig); err != nil {
+	var config model.MetricConfig
+	if err := backend.viper.UnmarshalExact(&config); err != nil {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
 	}
 
 	backend.Lock()
 	defer backend.Unlock()
 
-	backend.MetricConfig = &metricConfig
-	backend.fingerprint = hashConfig(&metricConfig)
+	backend.metricConfig = &config
+	backend.fingerprint = hashConfig(&config)
 
 	return nil
 }
@@ -98,24 +97,13 @@ func (backend *LocalConfigBackend) GetFingerprint() []byte {
 	return fingerprint
 }
 
-func (backend *LocalConfigBackend) IsSameFingerprint(fingerprint []byte) bool {
-	backend.Lock()
-	defer backend.Unlock()
-
-	if len(fingerprint) == 0 {
-		return false
-	}
-
-	return bytes.Equal(backend.fingerprint, fingerprint)
-}
-
 func (backend *LocalConfigBackend) BuildConfigResponse() *pb.ConfigResponse {
 	backend.Lock()
 	defer backend.Unlock()
 
 	return &pb.ConfigResponse{
 		Fingerprint:          backend.fingerprint,
-		MetricConfig:         backend.MetricConfig.Proto(),
+		MetricConfig:         backend.metricConfig.Proto(),
 		SuggestedWaitTimeSec: backend.waitTime,
 	}
 }

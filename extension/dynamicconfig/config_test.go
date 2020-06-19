@@ -49,7 +49,8 @@ func TestLoadConfig(t *testing.T) {
 			Endpoint:        "localhost:12345",
 			LocalConfigFile: "wut-the-wut.yaml",
 		},
-		ext1)
+		ext1,
+	)
 
 	assert.Equal(t, 1, len(cfg.Service.Extensions))
 	assert.Equal(t, "dynamicconfig/1", cfg.Service.Extensions[0])

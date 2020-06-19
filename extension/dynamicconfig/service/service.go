@@ -15,6 +15,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -25,7 +26,6 @@ import (
 // configuration data from.
 type ConfigBackend interface {
 	GetFingerprint() []byte
-	IsSameFingerprint(fingerprint []byte) bool
 	BuildConfigResponse() *pb.ConfigResponse
 }
 
@@ -63,7 +63,7 @@ func WithLocalConfig(filepath string) Option {
 
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	var resp *pb.ConfigResponse
-	if service.backend.IsSameFingerprint(req.LastKnownFingerprint) {
+	if bytes.Equal(service.backend.GetFingerprint(), req.LastKnownFingerprint){
 		resp = &pb.ConfigResponse{Fingerprint: service.backend.GetFingerprint()}
 	} else {
 		resp = service.backend.BuildConfigResponse()

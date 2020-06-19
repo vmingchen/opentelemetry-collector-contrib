@@ -45,8 +45,12 @@ func (p *Pattern) Proto() *pb.ConfigResponse_MetricConfig_Schedule_Pattern {
 
 func (p *Pattern) Hash() []byte {
 	hasher.Reset()
-	hasher.Write([]byte(p.Equals))
-	hasher.Write([]byte(p.StartsWith))
+
+	if len(p.Equals) > 0 {
+		hasher.Write([]byte(p.Equals))
+	} else {
+		hasher.Write(shuffle([]byte(p.StartsWith)))
+	}
 
 	return hasher.Sum(nil)
 }

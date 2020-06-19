@@ -53,9 +53,9 @@ func TestUpdateConfig(t *testing.T) {
     }
     backend.updateCh = make(chan struct{})
 
-    if backend.MetricConfig.Schedules[0].Period != "MIN_5" {
+    if backend.metricConfig.Schedules[0].Period != "MIN_5" {
         t.Errorf("update incorrect: wanted Period=MIN_5, got MetricConfig: %v",
-            backend.MetricConfig)
+            backend.metricConfig)
     }
 
     writeString(t, tmpfile, updatedSchedule)
@@ -63,9 +63,9 @@ func TestUpdateConfig(t *testing.T) {
 
     select {
     case <-backend.updateCh:
-        if backend.MetricConfig.Schedules[0].Period != "MIN_1" {
+        if backend.metricConfig.Schedules[0].Period != "MIN_1" {
             t.Errorf("update incorrect: wanted Period=MIN_1, got MetricConfig: %v",
-                backend.MetricConfig)
+                backend.metricConfig)
         }
     case <-timeout:
         t.Errorf("local config update timed out")
@@ -108,26 +108,11 @@ func TestGetFingerprint(t *testing.T) {
         t.Errorf("failed to read config file")
     }
 
-    fingerprint := backend.MetricConfig.Hash()
+    fingerprint := backend.metricConfig.Hash()
     backendFingerprint := backend.GetFingerprint()
     if !bytes.Equal(fingerprint, backendFingerprint) {
         t.Errorf("fingerprint inconsistent: expected %v, got %v",
             fingerprint, backendFingerprint)
-    }
-}
-
-func TestIsSameFingerprint(t *testing.T) {
-    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
-    if err != nil {
-        t.Errorf("failed to read config file")
-    }
-
-    if result := backend.IsSameFingerprint(nil); result != false {
-        t.Errorf("comparison to empty fingerprint should be false")
-    }
-
-    if result := backend.IsSameFingerprint(backend.GetFingerprint()); result != true {
-        t.Errorf("comparison to same fingerprint should be true")
     }
 }
 

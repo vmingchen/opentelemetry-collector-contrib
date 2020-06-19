@@ -65,7 +65,7 @@ func (schedule *Schedule) Hash() []byte {
 
 	hashes := [][]byte{
 		combineHash(incHashes),
-		combineHash(excHashes),
+		shuffle(combineHash(excHashes)),
 		schedule.Period.Hash(),
 		schedule.Metadata,
 	}

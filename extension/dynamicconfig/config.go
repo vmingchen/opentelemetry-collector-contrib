@@ -24,7 +24,7 @@ type Config struct {
 	configmodels.ExtensionSettings `mapstructure:",squash"`
 
 	// Endpoint is the address and port used to communicate the config updates
-	// The default value is localhost:55700.
+	// to the SDK. The default value is localhost:55700.
 	Endpoint string `mapstructure:"endpoint"`
 
 	// LocalConfigFile is the local record of configuration updates, applied

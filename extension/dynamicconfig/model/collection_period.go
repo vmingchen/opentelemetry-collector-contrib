@@ -31,7 +31,7 @@ func (period CollectionPeriod) Proto() pb.ConfigResponse_MetricConfig_Schedule_C
 
 func (period CollectionPeriod) Hash() []byte {
 	hasher.Reset()
-	hasher.Write([]byte(period))
+	hasher.Write([]byte(period.Proto().String()))
 	return hasher.Sum(nil)
 
 }
