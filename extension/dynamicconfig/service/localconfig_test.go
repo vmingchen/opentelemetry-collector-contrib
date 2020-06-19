@@ -15,6 +15,7 @@
 package service
 
 import (
+    "bytes"
     "io/ioutil"
     "os"
     "testing"
@@ -41,16 +42,10 @@ func TestUpdateConfig(t *testing.T) {
     updatedSchedule := `Schedules:
     - Period: MIN_1`
 
-    tmpfile, err := ioutil.TempFile("", "schedule.*.yaml")
-    if err != nil {
-        t.Fatalf("cannot open tempfile: %v", err)
-    }
+    tmpfile := newTmpSchedule(t)
     defer os.Remove(tmpfile.Name())
 
-    if _, err := tmpfile.WriteString(originalSchedule); err != nil {
-        tmpfile.Close()
-        t.Errorf("cannot write schedule: %v", err)
-    }
+    writeString(t, tmpfile, originalSchedule)
 
     backend, err := NewLocalConfigBackend(tmpfile.Name())
     if err != nil {
@@ -63,20 +58,8 @@ func TestUpdateConfig(t *testing.T) {
             backend.MetricConfig)
     }
 
-    if _, err := tmpfile.Seek(0, 0); err != nil {
-        t.Fatalf("cannot seek to beginning: %v", err)
-    }
-
-    if _, err := tmpfile.WriteString(updatedSchedule); err != nil {
-        tmpfile.Close()
-        t.Errorf("cannot write schedule: %v", err)
-    }
-
-    timeout := make(chan struct{}, 1)
-    go func() {
-        time.Sleep(5 * time.Second)
-        timeout <- struct{}{}
-    }()
+    writeString(t, tmpfile, updatedSchedule)
+    timeout := makeTimeout(5 * time.Second)
 
     select {
     case <-backend.updateCh:
@@ -87,5 +70,75 @@ func TestUpdateConfig(t *testing.T) {
     case <-timeout:
         t.Errorf("local config update timed out")
     }
+}
 
+func newTmpSchedule(t *testing.T) *os.File {
+    tmpfile, err := ioutil.TempFile("", "schedule.*.yaml")
+    if err != nil {
+        t.Fatalf("cannot open tempfile: %v", err)
+    }
+
+    return tmpfile
+}
+
+func writeString(t *testing.T, tmpfile *os.File, text string) {
+    if _, err := tmpfile.Seek(0, 0); err != nil {
+        t.Fatalf("cannot seek to beginning: %v", err)
+    }
+
+    if _, err := tmpfile.WriteString(text); err != nil {
+        tmpfile.Close()
+        t.Errorf("cannot write schedule: %v", err)
+    }
+}
+
+func makeTimeout(dur time.Duration) <-chan struct{} {
+    timeout := make(chan struct{}, 1)
+    go func() {
+        time.Sleep(dur)
+        timeout <- struct{}{}
+    }()
+
+    return timeout
+}
+
+func TestGetFingerprint(t *testing.T) {
+    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+    if err != nil {
+        t.Errorf("failed to read config file")
+    }
+
+    fingerprint := backend.MetricConfig.Hash()
+    backendFingerprint := backend.GetFingerprint()
+    if !bytes.Equal(fingerprint, backendFingerprint) {
+        t.Errorf("fingerprint inconsistent: expected %v, got %v",
+            fingerprint, backendFingerprint)
+    }
+}
+
+func TestIsSameFingerprint(t *testing.T) {
+    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+    if err != nil {
+        t.Errorf("failed to read config file")
+    }
+
+    if result := backend.IsSameFingerprint(nil); result != false {
+        t.Errorf("comparison to empty fingerprint should be false")
+    }
+
+    if result := backend.IsSameFingerprint(backend.GetFingerprint()); result != true {
+        t.Errorf("comparison to same fingerprint should be true")
+    }
+}
+
+func TestBuildConfigResponse(t *testing.T) {
+    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+    if err != nil {
+        t.Errorf("failed to read config file")
+    }
+
+    resp := backend.BuildConfigResponse()
+    if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
+        t.Errorf("config response incomplete: %v", resp)
+    }
 }
