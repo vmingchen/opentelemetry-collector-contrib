@@ -44,6 +44,7 @@ func TestFactory_CreateDefaultConfig(t *testing.T) {
 		},
 		Endpoint:        "localhost:55700",
 		LocalConfigFile: "dynamic-config-local-schedules.yaml",
+		WaitTime:        30,
 	}, cfg)
 
 	assert.NoError(t, configcheck.ValidateConfig(cfg))

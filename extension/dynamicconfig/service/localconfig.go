@@ -31,19 +31,20 @@ import (
 // what schedules to change. The file is read live, so changes to it will
 // reflect immediately in the configs.
 type LocalConfigBackend struct {
-	viper        *viper.Viper
+	viper *viper.Viper
+
+	mu           sync.Mutex
 	metricConfig *model.MetricConfig
 	fingerprint  []byte
-	waitTime     int32
 
-	updateCh	 chan struct{}   // syncs updates; meant for testing
-	sync.Mutex
+	waitTime int32
+	updateCh chan struct{} // syncs updates; meant for testing
 }
 
 func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 	backend := &LocalConfigBackend{
 		viper:    config.NewViper(),
-		waitTime: 30, // TODO: need more refined strategy for setting this
+		waitTime: 30,
 	}
 	backend.viper.SetConfigFile(configFile)
 
@@ -75,8 +76,8 @@ func (backend *LocalConfigBackend) updateConfig() error {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
 	}
 
-	backend.Lock()
-	defer backend.Unlock()
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
 
 	backend.metricConfig = &config
 	backend.fingerprint = hashConfig(&config)
@@ -89,8 +90,8 @@ func hashConfig(obj *model.MetricConfig) []byte {
 }
 
 func (backend *LocalConfigBackend) GetFingerprint() []byte {
-	backend.Lock()
-	defer backend.Unlock()
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
 
 	fingerprint := make([]byte, len(backend.fingerprint))
 	copy(fingerprint, backend.fingerprint)
@@ -98,8 +99,8 @@ func (backend *LocalConfigBackend) GetFingerprint() []byte {
 }
 
 func (backend *LocalConfigBackend) BuildConfigResponse() *pb.ConfigResponse {
-	backend.Lock()
-	defer backend.Unlock()
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
 
 	return &pb.ConfigResponse{
 		Fingerprint:          backend.fingerprint,

@@ -28,6 +28,14 @@ type Config struct {
 	Endpoint string `mapstructure:"endpoint"`
 
 	// LocalConfigFile is the local record of configuration updates, applied
-	// when a third-party config service backend is not used.
+	// when a third-party config service backend is not used. If this
+	// file is not specified, and no other config backends are specified,
+	// then it defaults to the file "dynamic-config-local-schedules.yaml",
+	// located in the same directory as the collector-wide config.
 	LocalConfigFile string `mapstructure:"local_config_file"`
+
+	// WaitTime is the suggested time, in seconds, for the client to wait
+	// before querying the collector for an updated configuration. Defaults to
+	// 30 seconds.
+	WaitTime int `mapstructure:"wait_time"`
 }

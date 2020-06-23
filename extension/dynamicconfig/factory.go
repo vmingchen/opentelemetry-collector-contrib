@@ -45,6 +45,7 @@ func (f *Factory) CreateDefaultConfig() configmodels.Extension {
 		},
 		Endpoint:        "localhost:55700",
 		LocalConfigFile: "dynamic-config-local-schedules.yaml",
+		WaitTime:        30,
 	}
 }
 

@@ -51,7 +51,9 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 	}
 
 	configService, err := service.NewConfigService(
-		service.WithLocalConfig(de.config.LocalConfigFile))
+		service.WithLocalConfig(de.config.LocalConfigFile),
+		service.WithWaitTime(int32(de.config.WaitTime)),
+	)
 	if err != nil {
 		host.ReportFatalError(err)
 		return err

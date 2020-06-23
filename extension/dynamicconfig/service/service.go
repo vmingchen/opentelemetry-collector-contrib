@@ -37,33 +37,68 @@ type ConfigService struct {
 }
 
 func NewConfigService(opts ...Option) (*ConfigService, error) {
-	service := &ConfigService{}
+	builder := &serviceBuilder{}
 	for _, opt := range opts {
-		if err := opt(service); err != nil {
-			return nil, err
-		}
+		opt(builder)
 	}
 
-	if service.backend == nil {
-		return nil, errors.New("config service is missing backend")
+	backend, err := builder.build()
+	if err != nil {
+		return nil, err
 	}
 
-	return service, nil
+	return &ConfigService{backend: backend}, nil
 }
 
-type Option func(*ConfigService) error
+type serviceBuilder struct {
+	filepath string
+	waitTime int32
+
+	// overrides build() to use this given backend.
+	// NOTE: intended for testing only!
+	backend ConfigBackend
+}
+
+func (builder *serviceBuilder) build() (ConfigBackend, error) {
+	if builder.backend != nil {
+		return builder.backend, nil
+	}
+
+	if builder.filepath != "" {
+		backend, err := NewLocalConfigBackend(builder.filepath)
+		if err != nil {
+			return nil, err
+		}
+
+		if builder.waitTime > 0 {
+			backend.waitTime = builder.waitTime
+		}
+
+		return backend, nil
+
+	}
+
+	return nil, errors.New("missing backend specification")
+
+}
+
+type Option func(*serviceBuilder)
 
 func WithLocalConfig(filepath string) Option {
-	return func(service *ConfigService) error {
-		backend, err := NewLocalConfigBackend(filepath)
-		service.backend = backend
-		return err
+	return func(builder *serviceBuilder) {
+		builder.filepath = filepath
+	}
+}
+
+func WithWaitTime(time int32) Option {
+	return func(builder *serviceBuilder) {
+		builder.waitTime = time
 	}
 }
 
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	var resp *pb.ConfigResponse
-	if bytes.Equal(service.backend.GetFingerprint(), req.LastKnownFingerprint){
+	if bytes.Equal(service.backend.GetFingerprint(), req.LastKnownFingerprint) {
 		resp = &pb.ConfigResponse{Fingerprint: service.backend.GetFingerprint()}
 	} else {
 		resp = service.backend.BuildConfigResponse()

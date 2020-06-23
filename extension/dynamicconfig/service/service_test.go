@@ -35,9 +35,8 @@ func (mock *mockBackend) BuildConfigResponse() *pb.ConfigResponse {
 }
 
 func withMockConfig() Option {
-	return func(service *ConfigService) error {
-		service.backend = &mockBackend{}
-		return nil
+	return func(builder *serviceBuilder) {
+		builder.backend = &mockBackend{}
 	}
 }
 
@@ -60,6 +59,24 @@ func TestLocalConfigOption(t *testing.T) {
 	if service == nil || err != nil {
 		t.Errorf("file exists but service not created: %v: %v", service, err)
 	}
+}
+
+func TestWaitTimeConfigOption(t *testing.T) {
+	const testWaitTime = 60
+
+	service, err := NewConfigService(
+		WithLocalConfig("../testdata/schedules.yaml"),
+		WithWaitTime(testWaitTime),
+	)
+	if service == nil || err != nil {
+		t.Errorf("file exists but service not created: %v: %v", service, err)
+	}
+
+	time := service.backend.(*LocalConfigBackend).waitTime
+	if time != testWaitTime {
+		t.Errorf("wait time of %d requested, found %d", testWaitTime, time)
+	}
+
 }
 
 func TestGetConfig(t *testing.T) {

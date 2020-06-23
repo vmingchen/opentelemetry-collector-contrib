@@ -48,6 +48,7 @@ func TestLoadConfig(t *testing.T) {
 			},
 			Endpoint:        "localhost:12345",
 			LocalConfigFile: "wut-the-wut.yaml",
+			WaitTime:        20,
 		},
 		ext1,
 	)

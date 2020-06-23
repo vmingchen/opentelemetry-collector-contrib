@@ -15,115 +15,115 @@
 package service
 
 import (
-    "bytes"
-    "io/ioutil"
-    "os"
-    "testing"
-    "time"
+	"bytes"
+	"io/ioutil"
+	"os"
+	"testing"
+	"time"
 )
 
 func TestNewLocalConfig(t *testing.T) {
-    if _, err := NewLocalConfigBackend("woot.txt"); err == nil {
-        t.Errorf("failed to catch nonexistant config file")
-    }
+	if _, err := NewLocalConfigBackend("woot.txt"); err == nil {
+		t.Errorf("failed to catch nonexistant config file")
+	}
 
-    if _, err := NewLocalConfigBackend("../testdata/schedules_bad.yaml"); err == nil {
-        t.Errorf("failed to catch impropoer config file")
-    }
+	if _, err := NewLocalConfigBackend("../testdata/schedules_bad.yaml"); err == nil {
+		t.Errorf("failed to catch impropoer config file")
+	}
 
-    if _, err := NewLocalConfigBackend("../testdata/schedules.yaml"); err != nil {
-        t.Errorf("failed to read config file")
-    }
+	if _, err := NewLocalConfigBackend("../testdata/schedules.yaml"); err != nil {
+		t.Errorf("failed to read config file")
+	}
 }
 
 func TestUpdateConfig(t *testing.T) {
-    originalSchedule := `Schedules:
+	originalSchedule := `Schedules:
     - Period: MIN_5`
-    updatedSchedule := `Schedules:
+	updatedSchedule := `Schedules:
     - Period: MIN_1`
 
-    tmpfile := newTmpSchedule(t)
-    defer os.Remove(tmpfile.Name())
+	tmpfile := newTmpSchedule(t)
+	defer os.Remove(tmpfile.Name())
 
-    writeString(t, tmpfile, originalSchedule)
+	writeString(t, tmpfile, originalSchedule)
 
-    backend, err := NewLocalConfigBackend(tmpfile.Name())
-    if err != nil {
-        t.Errorf("fail to create backend: %v", err)
-    }
-    backend.updateCh = make(chan struct{})
+	backend, err := NewLocalConfigBackend(tmpfile.Name())
+	if err != nil {
+		t.Errorf("fail to create backend: %v", err)
+	}
+	backend.updateCh = make(chan struct{})
 
-    if backend.metricConfig.Schedules[0].Period != "MIN_5" {
-        t.Errorf("update incorrect: wanted Period=MIN_5, got MetricConfig: %v",
-            backend.metricConfig)
-    }
+	if backend.metricConfig.Schedules[0].Period != "MIN_5" {
+		t.Errorf("update incorrect: wanted Period=MIN_5, got MetricConfig: %v",
+			backend.metricConfig)
+	}
 
-    writeString(t, tmpfile, updatedSchedule)
-    timeout := makeTimeout(5 * time.Second)
+	writeString(t, tmpfile, updatedSchedule)
+	timeout := makeTimeout(5 * time.Second)
 
-    select {
-    case <-backend.updateCh:
-        if backend.metricConfig.Schedules[0].Period != "MIN_1" {
-            t.Errorf("update incorrect: wanted Period=MIN_1, got MetricConfig: %v",
-                backend.metricConfig)
-        }
-    case <-timeout:
-        t.Errorf("local config update timed out")
-    }
+	select {
+	case <-backend.updateCh:
+		if backend.metricConfig.Schedules[0].Period != "MIN_1" {
+			t.Errorf("update incorrect: wanted Period=MIN_1, got MetricConfig: %v",
+				backend.metricConfig)
+		}
+	case <-timeout:
+		t.Errorf("local config update timed out")
+	}
 }
 
 func newTmpSchedule(t *testing.T) *os.File {
-    tmpfile, err := ioutil.TempFile("", "schedule.*.yaml")
-    if err != nil {
-        t.Fatalf("cannot open tempfile: %v", err)
-    }
+	tmpfile, err := ioutil.TempFile("", "schedule.*.yaml")
+	if err != nil {
+		t.Fatalf("cannot open tempfile: %v", err)
+	}
 
-    return tmpfile
+	return tmpfile
 }
 
 func writeString(t *testing.T, tmpfile *os.File, text string) {
-    if _, err := tmpfile.Seek(0, 0); err != nil {
-        t.Fatalf("cannot seek to beginning: %v", err)
-    }
+	if _, err := tmpfile.Seek(0, 0); err != nil {
+		t.Fatalf("cannot seek to beginning: %v", err)
+	}
 
-    if _, err := tmpfile.WriteString(text); err != nil {
-        tmpfile.Close()
-        t.Errorf("cannot write schedule: %v", err)
-    }
+	if _, err := tmpfile.WriteString(text); err != nil {
+		tmpfile.Close()
+		t.Errorf("cannot write schedule: %v", err)
+	}
 }
 
 func makeTimeout(dur time.Duration) <-chan struct{} {
-    timeout := make(chan struct{}, 1)
-    go func() {
-        time.Sleep(dur)
-        timeout <- struct{}{}
-    }()
+	timeout := make(chan struct{}, 1)
+	go func() {
+		time.Sleep(dur)
+		timeout <- struct{}{}
+	}()
 
-    return timeout
+	return timeout
 }
 
 func TestGetFingerprint(t *testing.T) {
-    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
-    if err != nil {
-        t.Errorf("failed to read config file")
-    }
+	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+	if err != nil {
+		t.Errorf("failed to read config file")
+	}
 
-    fingerprint := backend.metricConfig.Hash()
-    backendFingerprint := backend.GetFingerprint()
-    if !bytes.Equal(fingerprint, backendFingerprint) {
-        t.Errorf("fingerprint inconsistent: expected %v, got %v",
-            fingerprint, backendFingerprint)
-    }
+	fingerprint := backend.metricConfig.Hash()
+	backendFingerprint := backend.GetFingerprint()
+	if !bytes.Equal(fingerprint, backendFingerprint) {
+		t.Errorf("fingerprint inconsistent: expected %v, got %v",
+			fingerprint, backendFingerprint)
+	}
 }
 
 func TestBuildConfigResponse(t *testing.T) {
-    backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
-    if err != nil {
-        t.Errorf("failed to read config file")
-    }
+	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+	if err != nil {
+		t.Errorf("failed to read config file")
+	}
 
-    resp := backend.BuildConfigResponse()
-    if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
-        t.Errorf("config response incomplete: %v", resp)
-    }
+	resp := backend.BuildConfigResponse()
+	if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
+		t.Errorf("config response incomplete: %v", resp)
+	}
 }
