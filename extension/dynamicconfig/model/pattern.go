@@ -19,6 +19,7 @@
 package model
 
 import (
+	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -44,11 +45,13 @@ func (p *Pattern) Proto() *pb.ConfigResponse_MetricConfig_Schedule_Pattern {
 }
 
 func (p *Pattern) Hash() []byte {
-	hasher.Reset()
+	hasher := fnv.New64a()
 
 	if len(p.Equals) > 0 {
 		hasher.Write([]byte(p.Equals))
 	} else {
+		// shuffling "StartsWith" breaks symmetry with "Equals," allowing the
+		// two to be distinguished purely by hash
 		hasher.Write(shuffle([]byte(p.StartsWith)))
 	}
 

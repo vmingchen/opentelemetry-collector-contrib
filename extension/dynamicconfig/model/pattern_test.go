@@ -23,41 +23,41 @@ import (
 
 func TestPatternProto(t *testing.T) {
 	pattern := Pattern{
-		StartsWith: "woot",
+		StartsWith: "/my/metric",
 	}
 
 	p := pattern.Proto()
 
-	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_StartsWith).StartsWith != "woot" {
+	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_StartsWith).StartsWith != "/my/metric" {
 		t.Errorf("improper conversion to proto")
 	}
 }
 
 func TestPatternDuplicateProto(t *testing.T) {
 	pattern := Pattern{
-		Equals:     "use this",
-		StartsWith: "not this",
+		Equals:     "/use/this/rule",
+		StartsWith: "/not/this/one",
 	}
 
 	p := pattern.Proto()
 
-	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_Equals).Equals != "use this" {
+	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_Equals).Equals != "/use/this/rule" {
 		t.Errorf("improper conversion to proto")
 	}
 }
 
 func TestPatternHash(t *testing.T) {
 	configA := Pattern{
-		Equals:     "use this",
-		StartsWith: "not this",
+		Equals:     "/use/this/rule",
+		StartsWith: "/not/this/one",
 	}
 
 	configB := Pattern{
-		Equals: "use this",
+		Equals: "/use/this/rule",
 	}
 
 	configC := Pattern{
-		StartsWith: "use this",
+		StartsWith: "/use/this/rule",
 	}
 
 	if !bytes.Equal(configA.Hash(), configB.Hash()) {

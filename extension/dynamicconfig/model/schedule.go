@@ -19,6 +19,7 @@
 package model
 
 import (
+	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -65,12 +66,12 @@ func (schedule *Schedule) Hash() []byte {
 
 	hashes := [][]byte{
 		combineHash(incHashes),
-		shuffle(combineHash(excHashes)),
+		shuffle(combineHash(excHashes)), // break symmetry with incHashes
 		schedule.Period.Hash(),
 		schedule.Metadata,
 	}
 
-	hasher.Reset()
+	hasher := fnv.New64a()
 	for _, val := range hashes {
 		hasher.Write(val)
 	}

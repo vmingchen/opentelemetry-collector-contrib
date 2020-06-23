@@ -19,6 +19,7 @@
 package model
 
 import (
+	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -30,7 +31,7 @@ func (period CollectionPeriod) Proto() pb.ConfigResponse_MetricConfig_Schedule_C
 }
 
 func (period CollectionPeriod) Hash() []byte {
-	hasher.Reset()
+	hasher := fnv.New64a()
 	hasher.Write([]byte(period.Proto().String()))
 	return hasher.Sum(nil)
 

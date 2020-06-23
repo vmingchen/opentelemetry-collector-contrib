@@ -19,11 +19,8 @@ package model
 
 import (
 	"fmt"
-	"hash"
-	"hash/fnv"
 )
 
-var hasher hash.Hash = fnv.New64a()
 
 func combineHash(chunks [][]byte) []byte {
 	if len(chunks) == 0 {
