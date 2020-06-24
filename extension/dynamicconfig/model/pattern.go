@@ -19,8 +19,8 @@
 package model
 
 import (
-	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"hash/fnv"
 )
 
 type Pattern struct {
@@ -48,11 +48,11 @@ func (p *Pattern) Hash() []byte {
 	hasher := fnv.New64a()
 
 	if len(p.Equals) > 0 {
+		hasher.Write([]byte("Equals"))
 		hasher.Write([]byte(p.Equals))
 	} else {
-		// shuffling "StartsWith" breaks symmetry with "Equals," allowing the
-		// two to be distinguished purely by hash
-		hasher.Write(shuffle([]byte(p.StartsWith)))
+		hasher.Write([]byte("StartsWith"))
+		hasher.Write([]byte(p.StartsWith))
 	}
 
 	return hasher.Sum(nil)

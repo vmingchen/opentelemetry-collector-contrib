@@ -19,8 +19,8 @@
 package model
 
 import (
-	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"hash/fnv"
 )
 
 type Schedule struct {
@@ -65,8 +65,10 @@ func (schedule *Schedule) Hash() []byte {
 	}
 
 	hashes := [][]byte{
+		[]byte("InclusionPatterns"),
 		combineHash(incHashes),
-		shuffle(combineHash(excHashes)), // break symmetry with incHashes
+		[]byte("ExclusionPatterns"),
+		combineHash(excHashes),
 		schedule.Period.Hash(),
 		schedule.Metadata,
 	}

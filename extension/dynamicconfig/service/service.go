@@ -79,7 +79,6 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 	}
 
 	return nil, errors.New("missing backend specification")
-
 }
 
 type Option func(*serviceBuilder)

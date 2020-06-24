@@ -19,8 +19,8 @@
 package model
 
 import (
-	"hash/fnv"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"hash/fnv"
 )
 
 type CollectionPeriod string

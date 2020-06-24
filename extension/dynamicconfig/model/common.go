@@ -21,7 +21,6 @@ import (
 	"fmt"
 )
 
-
 func combineHash(chunks [][]byte) []byte {
 	if len(chunks) == 0 {
 		return nil
@@ -40,16 +39,4 @@ func combineHash(chunks [][]byte) []byte {
 	}
 
 	return totalHash
-}
-
-func shuffle(pattern []byte) []byte {
-	hash := make([]byte, len(pattern))
-	copy(hash, pattern)
-
-	for i, chunk := range hash {
-		// flip odd bits to break symmetry
-		hash[i] = chunk ^ 0x55
-	}
-
-	return hash
 }
