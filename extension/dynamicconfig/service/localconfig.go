@@ -25,6 +25,7 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/model"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 // LocalConfigBackend is a ConfigBackend that uses a local file to determine
@@ -89,7 +90,7 @@ func hashConfig(obj *model.MetricConfig) []byte {
 	return obj.Hash()
 }
 
-func (backend *LocalConfigBackend) GetFingerprint() []byte {
+func (backend *LocalConfigBackend) GetFingerprint(_ *res.Resource) []byte {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
@@ -98,7 +99,7 @@ func (backend *LocalConfigBackend) GetFingerprint() []byte {
 	return fingerprint
 }
 
-func (backend *LocalConfigBackend) BuildConfigResponse() *pb.ConfigResponse {
+func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 

@@ -20,17 +20,18 @@ import (
 	"testing"
 
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 var mockFingerprint = []byte("There once was a cat named Gretchen")
 
 type mockBackend struct{}
 
-func (mock *mockBackend) GetFingerprint() []byte {
+func (mock *mockBackend) GetFingerprint(_ *res.Resource) []byte {
 	return []byte(mockFingerprint)
 }
 
-func (mock *mockBackend) BuildConfigResponse() *pb.ConfigResponse {
+func (mock *mockBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
 	return &pb.ConfigResponse{}
 }
 
