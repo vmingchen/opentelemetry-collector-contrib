@@ -20,13 +20,14 @@ import (
 	"errors"
 
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 // ConfigBackend defines a general backend that the service can read
 // configuration data from.
 type ConfigBackend interface {
-	GetFingerprint() []byte
-	BuildConfigResponse() *pb.ConfigResponse
+	GetFingerprint(*res.Resource) []byte
+	BuildConfigResponse(*res.Resource) *pb.ConfigResponse
 }
 
 // ConfigService implements the server side of the gRPC service for config
@@ -95,12 +96,16 @@ func WithWaitTime(time int32) Option {
 	}
 }
 
+// TODO: Match req.Resource to appropriate configs
+// TODO: pass Resource to BuildConfigResponse
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	var resp *pb.ConfigResponse
-	if bytes.Equal(service.backend.GetFingerprint(), req.LastKnownFingerprint) {
-		resp = &pb.ConfigResponse{Fingerprint: service.backend.GetFingerprint()}
+	backendFingerprint := service.backend.GetFingerprint(req.Resource)
+
+	if bytes.Equal(backendFingerprint, req.LastKnownFingerprint) {
+		resp = &pb.ConfigResponse{Fingerprint: backendFingerprint}
 	} else {
-		resp = service.backend.BuildConfigResponse()
+		resp = service.backend.BuildConfigResponse(req.Resource)
 	}
 
 	return resp, nil

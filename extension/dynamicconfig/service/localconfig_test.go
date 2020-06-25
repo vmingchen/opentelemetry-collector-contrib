@@ -109,7 +109,7 @@ func TestGetFingerprint(t *testing.T) {
 	}
 
 	fingerprint := backend.metricConfig.Hash()
-	backendFingerprint := backend.GetFingerprint()
+	backendFingerprint := backend.GetFingerprint(nil)
 	if !bytes.Equal(fingerprint, backendFingerprint) {
 		t.Errorf("fingerprint inconsistent: expected %v, got %v",
 			fingerprint, backendFingerprint)
@@ -122,7 +122,7 @@ func TestBuildConfigResponse(t *testing.T) {
 		t.Errorf("failed to read config file")
 	}
 
-	resp := backend.BuildConfigResponse()
+	resp := backend.BuildConfigResponse(nil)
 	if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
 		t.Errorf("config response incomplete: %v", resp)
 	}
