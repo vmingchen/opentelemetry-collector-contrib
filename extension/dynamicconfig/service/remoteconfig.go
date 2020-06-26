@@ -44,7 +44,7 @@ type responseMonitorChan struct {
 	quit       chan struct{}
 }
 
-func responseMonitor(chs *responseMonitorChan) {
+func monitorResponse(chs *responseMonitorChan) {
 	var resp *pb.ConfigResponse
 
 	for {
@@ -77,7 +77,7 @@ func NewRemoteConfigBackend(target string) (*RemoteConfigBackend, error) {
 		},
 	}
 
-	go responseMonitor(backend.chs)
+	go monitorResponse(backend.chs)
 	return backend, nil
 }
 

@@ -19,31 +19,8 @@ import (
 	"context"
 	"testing"
 
-	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
-
-var mockFingerprint = []byte("There once was a cat named Gretchen")
-
-type mockBackend struct{}
-
-func (mock *mockBackend) GetFingerprint(_ *res.Resource) []byte {
-	return []byte(mockFingerprint)
-}
-
-func (mock *mockBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
-	return &pb.ConfigResponse{}
-}
-
-func (mock *mockBackend) Close() error {
-	return nil
-}
-
-func withMockConfig() Option {
-	return func(builder *serviceBuilder) {
-		builder.backend = &mockBackend{}
-	}
-}
 
 func TestNewConfigService(t *testing.T) {
 	if service, err := NewConfigService(); service != nil || err == nil {
@@ -53,6 +30,10 @@ func TestNewConfigService(t *testing.T) {
 	if service, err := NewConfigService(withMockConfig()); service == nil || err != nil {
 		t.Errorf("backend specified but service not created: %v: %v", service, err)
 	}
+}
+
+func TestRemoteConfigOption(t *testing.T) {
+	t.Errorf("unimplemented")
 }
 
 func TestLocalConfigOption(t *testing.T) {
