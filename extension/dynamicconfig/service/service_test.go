@@ -19,8 +19,8 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
+	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
 var mockFingerprint = []byte("There once was a cat named Gretchen")
@@ -33,6 +33,10 @@ func (mock *mockBackend) GetFingerprint(_ *res.Resource) []byte {
 
 func (mock *mockBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
 	return &pb.ConfigResponse{}
+}
+
+func (mock *mockBackend) Close() error {
+	return nil
 }
 
 func withMockConfig() Option {

@@ -18,9 +18,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
+	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
 // ConfigBackend defines a general backend that the service can read
@@ -28,6 +29,7 @@ import (
 type ConfigBackend interface {
 	GetFingerprint(*res.Resource) []byte
 	BuildConfigResponse(*res.Resource) *pb.ConfigResponse
+	Close() error
 }
 
 // ConfigService implements the server side of the gRPC service for config
@@ -52,6 +54,7 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 }
 
 type serviceBuilder struct {
+	target   string
 	filepath string
 	waitTime int32
 
@@ -60,9 +63,19 @@ type serviceBuilder struct {
 	backend ConfigBackend
 }
 
+// TODO: implement LocalConfigBackend as fall-back
 func (builder *serviceBuilder) build() (ConfigBackend, error) {
 	if builder.backend != nil {
 		return builder.backend, nil
+	}
+
+	if builder.target != "" {
+		backend, err := NewRemoteConfigBackend(builder.target)
+		if err != nil {
+			return nil, err
+		}
+
+		return backend, nil
 	}
 
 	if builder.filepath != "" {
@@ -84,6 +97,12 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 
 type Option func(*serviceBuilder)
 
+func WithRemoteConfig(target string) Option {
+	return func(builder *serviceBuilder) {
+		builder.target = target
+	}
+}
+
 func WithLocalConfig(filepath string) Option {
 	return func(builder *serviceBuilder) {
 		builder.filepath = filepath
@@ -97,7 +116,6 @@ func WithWaitTime(time int32) Option {
 }
 
 // TODO: Match req.Resource to appropriate configs
-// TODO: pass Resource to BuildConfigResponse
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	var resp *pb.ConfigResponse
 	backendFingerprint := service.backend.GetFingerprint(req.Resource)
@@ -109,4 +127,14 @@ func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigReque
 	}
 
 	return resp, nil
+}
+
+func (service *ConfigService) Stop() error {
+	if service != nil {
+		if err := service.backend.Close(); err != nil {
+			return fmt.Errorf("fail to stop config service: %w", err)
+		}
+	}
+
+	return nil
 }

@@ -42,7 +42,8 @@ func TestFactory_CreateDefaultConfig(t *testing.T) {
 			NameVal: typeStr,
 			TypeVal: typeStr,
 		},
-		Endpoint:        "localhost:55700",
+		Endpoint:        "0.0.0.0:55700",
+		Target:          "",
 		LocalConfigFile: "dynamic-config-local-schedules.yaml",
 		WaitTime:        30,
 	}, cfg)

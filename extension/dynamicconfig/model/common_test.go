@@ -47,15 +47,3 @@ func TestCombineHashPanic(t *testing.T) {
 
 	combineHash(chunks)
 }
-
-func TestShuffle(t *testing.T) {
-	hash := []byte{0x55, 0x55, 0x55}
-
-	expected := []byte{0, 0, 0}
-	result := shuffle(hash)
-
-	if !bytes.Equal(expected, result) {
-		t.Errorf("expected: %v, got: %v", expected, result)
-	}
-
-}

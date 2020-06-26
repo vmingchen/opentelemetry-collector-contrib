@@ -26,10 +26,12 @@ import (
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
+// TODO: config update to use target
 type dynamicConfigExtension struct {
-	config Config
-	logger *zap.Logger
-	server *grpc.Server
+	config        Config
+	logger        *zap.Logger
+	server        *grpc.Server
+	configService *service.ConfigService
 }
 
 func newServer(config Config, logger *zap.Logger) (*dynamicConfigExtension, error) {
@@ -59,6 +61,7 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 		return err
 	}
 
+	de.configService = configService
 	pb.RegisterDynamicConfigServer(de.server, configService)
 
 	go func() {
@@ -72,6 +75,7 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 
 func (de *dynamicConfigExtension) Shutdown(ctx context.Context) error {
 	de.logger.Info("Shutting down dynamic config extension")
+	de.configService.Stop()
 	de.server.GracefulStop()
 	return nil
 }

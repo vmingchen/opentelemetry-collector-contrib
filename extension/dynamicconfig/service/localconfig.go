@@ -24,8 +24,8 @@ import (
 	"go.opentelemetry.io/collector/config"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/model"
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
+	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
 // LocalConfigBackend is a ConfigBackend that uses a local file to determine
@@ -108,4 +108,9 @@ func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) *pb.Conf
 		MetricConfig:         backend.metricConfig.Proto(),
 		SuggestedWaitTimeSec: backend.waitTime,
 	}
+}
+
+func (backend *LocalConfigBackend) Close() error {
+	// TODO: need to cleanup Viper resources?
+	return nil
 }

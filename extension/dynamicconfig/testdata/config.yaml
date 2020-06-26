@@ -1,7 +1,8 @@
 extensions:
   dynamicconfig:
   dynamicconfig/1:
-    endpoint: localhost:12345
+    endpoint: 0.0.0.0:12345
+    target: 0.0.0.0:54321
     local_config_file: wut-the-wut.yaml
     wait_time: 20
 
