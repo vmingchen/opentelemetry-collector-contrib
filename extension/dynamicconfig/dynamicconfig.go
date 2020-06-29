@@ -16,6 +16,7 @@ package dynamicconfig
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"go.opentelemetry.io/collector/component"

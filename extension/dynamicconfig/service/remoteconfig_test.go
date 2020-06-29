@@ -15,10 +15,41 @@
 package service
 
 import (
+    "bytes"
 	"testing"
 
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
+
+func SetUpServer(t *testing.T) (*RemoteConfigBackend, chan struct{}, chan struct{}) {
+    address := ":50052"
+
+    // making remote backend
+    configService, err := NewConfigService(WithRemoteConfig(address))
+    if err != nil {
+        t.Fatalf("fail to init remote config service: %v", err)
+    }
+
+    backend := configService.backend.(*RemoteConfigBackend)
+    quit := make(chan struct{})
+    done := make(chan struct{})
+
+    // making mock third-party
+    mockService, _ := NewConfigService(withMockConfig())
+    startMockServer(t, mockService, address, quit, done)
+    <-done
+
+    return backend, quit, done
+}
+
+func TearDownServer(t *testing.T, backend *RemoteConfigBackend, quit chan struct{}, done chan struct{}) {
+    quit <- struct{}{}
+    if err := backend.Close(); err != nil {
+        t.Errorf("fail to close backend: %v", err)
+    }
+
+    <-done
+}
 
 func TestResponseMonitor(t *testing.T) {
 	chs := &responseMonitorChan{
@@ -42,5 +73,54 @@ func TestResponseMonitor(t *testing.T) {
 }
 
 func TestNewRemoteConfigBackend(t *testing.T) {
+    backend, quit, done := SetUpServer(t)
+    defer TearDownServer(t, backend, quit, done)
 
+    if err := backend.initConn(); err != nil {
+        t.Fatalf("failed to connect: %v", err)
+    }
+
+    if backend.conn == nil || backend.client == nil {
+        t.Errorf("connection structs not properly instantiated")
+    }
+}
+
+func TestUpdateStrategy(t *testing.T) {
+    configService, err := NewConfigService(WithRemoteConfig("0.0.0.0:55800"))
+    if err != nil {
+        t.Fatalf("fail to init remote config service: %v", err)
+    }
+
+    backend := configService.backend.(*RemoteConfigBackend)
+
+    if strategy := backend.GetUpdateStrategy(); strategy != Default {
+        t.Errorf("expected strategy Default, got %v", strategy)
+    }
+
+    backend.SetUpdateStrategy(OnGetFingerprint)
+
+    if strategy := backend.GetUpdateStrategy(); strategy != OnGetFingerprint {
+        t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
+    }
+
+    const NonsenseStrategy UpdateStrategy = 255
+    backend.SetUpdateStrategy(NonsenseStrategy)
+
+    if strategy := backend.GetUpdateStrategy(); strategy != OnGetFingerprint {
+        t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
+    }
+}
+
+func TestGetFingerprintRemote(t *testing.T) {
+    backend, quit, done := SetUpServer(t)
+    defer TearDownServer(t, backend, quit, done)
+
+    fingerprint, err := backend.GetFingerprint(nil)
+    if err != nil {
+        t.Errorf("fail to get fingerprint: %v", err)
+    }
+
+    if !bytes.Equal(fingerprint, mockFingerprint) {
+        t.Errorf("expected fingerprint %v, got %v", mockFingerprint, fingerprint)
+    }
 }

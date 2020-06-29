@@ -102,27 +102,35 @@ func makeTimeout(dur time.Duration) <-chan struct{} {
 	return timeout
 }
 
-func TestGetFingerprint(t *testing.T) {
+func TestGetFingerprintLocal(t *testing.T) {
 	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
 	if err != nil {
 		t.Errorf("failed to read config file")
 	}
 
 	fingerprint := backend.metricConfig.Hash()
-	backendFingerprint := backend.GetFingerprint(nil)
+	backendFingerprint, err := backend.GetFingerprint(nil)
+	if err != nil {
+		t.Errorf("fail to get fingerprint: %v", err)
+	}
+
 	if !bytes.Equal(fingerprint, backendFingerprint) {
 		t.Errorf("fingerprint inconsistent: expected %v, got %v",
 			fingerprint, backendFingerprint)
 	}
 }
 
-func TestBuildConfigResponse(t *testing.T) {
+func TestBuildConfigResponseLocal(t *testing.T) {
 	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
 	if err != nil {
 		t.Errorf("failed to read config file")
 	}
 
-	resp := backend.BuildConfigResponse(nil)
+	resp, err := backend.BuildConfigResponse(nil)
+	if err != nil {
+		t.Errorf("fail to build config response: %v", err)
+	}
+
 	if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
 		t.Errorf("config response incomplete: %v", resp)
 	}

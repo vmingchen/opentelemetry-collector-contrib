@@ -24,16 +24,18 @@ import (
 )
 
 var mockFingerprint = []byte("There once was a cat named Gretchen")
-var mockResponse = &pb.ConfigResponse{}
+var mockResponse = &pb.ConfigResponse{
+	Fingerprint: mockFingerprint,
+}
 
 type mockBackend struct{}
 
-func (mock *mockBackend) GetFingerprint(_ *res.Resource) []byte {
-	return []byte(mockFingerprint)
+func (mock *mockBackend) GetFingerprint(_ *res.Resource) ([]byte, error) {
+	return []byte(mockFingerprint), nil
 }
 
-func (mock *mockBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
-	return mockResponse
+func (mock *mockBackend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
+	return mockResponse, nil
 }
 
 func (mock *mockBackend) Close() error {
@@ -47,30 +49,30 @@ func withMockConfig() Option {
 }
 
 // startMockServer is a test utility to start a quick-n-dirty gRPC server.
-func startMockServer(t testing.T, address string, quit chan struct{}) {
-	listen, err := net.Listen("tcp", address)
-	if err != nil {
-		t.Errorf("mock server fail to open port: %v", err)
-	}
+func startMockServer(t *testing.T, configService *ConfigService, address string,
+	quit <-chan struct{}, done chan<- struct{}) {
 
-	configService, err := NewConfigService(
-		withMockConfig(),
-	)
-	if err != nil {
-		t.Errorf("mock server fail to start config service: %v", err)
+	listen, err := net.Listen("tcp", address)
+
+	if listen == nil || err != nil {
+		t.Fatalf("fail to listen: %v", err)
 	}
 
 	server := grpc.NewServer()
 	pb.RegisterDynamicConfigServer(server, configService)
 
 	go func() {
+		done <- struct{}{}
 		if err := server.Serve(listen); err != nil {
-			t.Errorf("mock server fail to listen: %v", err)
+			t.Errorf("fail to serve: %v", err)
 		}
 	}()
 
 	go func() {
 		<-quit
-		server.GracefulStop()
+		configService.Stop()
+		server.Stop()
+
+		done <- struct{}{}
 	}()
 }

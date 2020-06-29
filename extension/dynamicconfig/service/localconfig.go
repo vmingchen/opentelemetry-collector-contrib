@@ -90,16 +90,16 @@ func hashConfig(obj *model.MetricConfig) []byte {
 	return obj.Hash()
 }
 
-func (backend *LocalConfigBackend) GetFingerprint(_ *res.Resource) []byte {
+func (backend *LocalConfigBackend) GetFingerprint(_ *res.Resource) ([]byte, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
 	fingerprint := make([]byte, len(backend.fingerprint))
 	copy(fingerprint, backend.fingerprint)
-	return fingerprint
+	return fingerprint, nil
 }
 
-func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) *pb.ConfigResponse {
+func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
@@ -107,7 +107,7 @@ func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) *pb.Conf
 		Fingerprint:          backend.fingerprint,
 		MetricConfig:         backend.metricConfig.Proto(),
 		SuggestedWaitTimeSec: backend.waitTime,
-	}
+	}, nil
 }
 
 func (backend *LocalConfigBackend) Close() error {

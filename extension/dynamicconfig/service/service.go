@@ -27,8 +27,8 @@ import (
 // ConfigBackend defines a general backend that the service can read
 // configuration data from.
 type ConfigBackend interface {
-	GetFingerprint(*res.Resource) []byte
-	BuildConfigResponse(*res.Resource) *pb.ConfigResponse
+	GetFingerprint(*res.Resource) ([]byte, error)
+	BuildConfigResponse(*res.Resource) (*pb.ConfigResponse, error)
 	Close() error
 }
 
@@ -56,6 +56,7 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 type serviceBuilder struct {
 	target   string
 	filepath string
+	updateStrategy UpdateStrategy
 	waitTime int32
 
 	// overrides build() to use this given backend.
@@ -73,6 +74,10 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 		backend, err := NewRemoteConfigBackend(builder.target)
 		if err != nil {
 			return nil, err
+		}
+
+		if builder.updateStrategy != 0{
+			backend.SetUpdateStrategy(builder.updateStrategy)
 		}
 
 		return backend, nil
@@ -103,6 +108,12 @@ func WithRemoteConfig(target string) Option {
 	}
 }
 
+func WithUpdateStrategy(strategy UpdateStrategy) Option {
+	return func(builder *serviceBuilder) {
+		builder.updateStrategy = strategy
+	}
+}
+
 func WithLocalConfig(filepath string) Option {
 	return func(builder *serviceBuilder) {
 		builder.filepath = filepath
@@ -118,12 +129,18 @@ func WithWaitTime(time int32) Option {
 // TODO: Match req.Resource to appropriate configs
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	var resp *pb.ConfigResponse
-	backendFingerprint := service.backend.GetFingerprint(req.Resource)
+	backendFingerprint, err := service.backend.GetFingerprint(req.Resource)
+	if err != nil {
+		return nil, fmt.Errorf("fail GetConfig call: %w", err)
+	}
 
 	if bytes.Equal(backendFingerprint, req.LastKnownFingerprint) {
 		resp = &pb.ConfigResponse{Fingerprint: backendFingerprint}
 	} else {
-		resp = service.backend.BuildConfigResponse(req.Resource)
+		resp, err = service.backend.BuildConfigResponse(req.Resource)
+		if err != nil {
+			return nil, fmt.Errorf("fail GetConfig call: %w", err)
+		}
 	}
 
 	return resp, nil

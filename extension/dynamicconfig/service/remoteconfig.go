@@ -32,6 +32,7 @@ const (
 )
 
 type RemoteConfigBackend struct {
+	target		   string
 	conn           *grpc.ClientConn
 	client         pb.DynamicConfigClient
 	updateStrategy UpdateStrategy
@@ -58,17 +59,10 @@ func monitorResponse(chs *responseMonitorChan) {
 }
 
 func NewRemoteConfigBackend(target string) (*RemoteConfigBackend, error) {
-	conn, err := grpc.Dial(
-		target,
-		grpc.WithInsecure(),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("remote config backend fail to connect: %w", err)
-	}
-
 	backend := &RemoteConfigBackend{
-		conn:           conn,
-		client:         pb.NewDynamicConfigClient(conn),
+		target: 		target,
+		conn:           nil,
+		client:         nil,
 		updateStrategy: Default,
 		chs: &responseMonitorChan{
 			getResp:    make(chan *pb.ConfigResponse),
@@ -77,9 +71,28 @@ func NewRemoteConfigBackend(target string) (*RemoteConfigBackend, error) {
 		},
 	}
 
+	if err := backend.initConn(); err != nil {
+		return nil, err
+	}
+
 	go monitorResponse(backend.chs)
 	return backend, nil
 }
+
+func (backend *RemoteConfigBackend) initConn() error {
+	conn, err := grpc.Dial(
+		backend.target,
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		return fmt.Errorf("remote config backend fail to connect: %w", err)
+	}
+
+	backend.conn = conn
+	backend.client = pb.NewDynamicConfigClient(conn)
+	return nil
+}
+
 
 func (backend *RemoteConfigBackend) GetUpdateStrategy() UpdateStrategy {
 	return backend.updateStrategy
@@ -91,19 +104,24 @@ func (backend *RemoteConfigBackend) SetUpdateStrategy(strategy UpdateStrategy) {
 	}
 }
 
-func (backend *RemoteConfigBackend) GetFingerprint(resource *res.Resource) []byte {
-	backend.syncRemote(resource)
-	resp := <-backend.chs.getResp
-	return resp.Fingerprint
-}
-
-func (backend *RemoteConfigBackend) BuildConfigResponse(resource *res.Resource) *pb.ConfigResponse {
-	if backend.updateStrategy == Default {
-		backend.syncRemote(resource)
+func (backend *RemoteConfigBackend) GetFingerprint(resource *res.Resource) ([]byte, error) {
+	if err := backend.syncRemote(resource); err != nil {
+		return nil, fmt.Errorf("fail to get fingerprint: %w", err)
 	}
 
 	resp := <-backend.chs.getResp
-	return resp
+	return resp.Fingerprint, nil
+}
+
+func (backend *RemoteConfigBackend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
+	if backend.updateStrategy == Default {
+		if err := backend.syncRemote(resource); err != nil {
+			return nil, fmt.Errorf("fail to build config resp: %w", err)
+		}
+	}
+
+	resp := <-backend.chs.getResp
+	return resp, nil
 }
 
 func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
@@ -128,6 +146,8 @@ func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
 
 func (backend *RemoteConfigBackend) Close() error {
 	backend.chs.quit <- struct{}{}
+
+	// TODO: gRPC connection seems to take inordinately long to close
 	if err := backend.conn.Close(); err != nil {
 		return fmt.Errorf("remote config backend fail to close connection: %w", err)
 	}
