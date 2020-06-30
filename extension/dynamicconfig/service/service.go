@@ -54,10 +54,10 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 }
 
 type serviceBuilder struct {
-	target         string
-	filepath       string
-	updateStrategy UpdateStrategy
-	waitTime       int32
+	remoteConfigAddress string
+	filepath            string
+	updateStrategy      UpdateStrategy
+	waitTime            int32
 
 	// overrides build() to use this given backend.
 	// NOTE: intended for testing only!
@@ -70,8 +70,8 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 		return builder.backend, nil
 	}
 
-	if builder.target != "" {
-		backend, err := NewRemoteConfigBackend(builder.target)
+	if builder.remoteConfigAddress != "" {
+		backend, err := NewRemoteConfigBackend(builder.remoteConfigAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -102,9 +102,9 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 
 type Option func(*serviceBuilder)
 
-func WithRemoteConfig(target string) Option {
+func WithRemoteConfig(remoteConfigAddress string) Option {
 	return func(builder *serviceBuilder) {
-		builder.target = target
+		builder.remoteConfigAddress = remoteConfigAddress
 	}
 }
 
@@ -131,7 +131,7 @@ func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigReque
 	var resp *pb.ConfigResponse
 	backendFingerprint, err := service.backend.GetFingerprint(req.Resource)
 	if err != nil {
-		return nil, fmt.Errorf("fail GetConfig call: %w", err)
+		return nil, fmt.Errorf("fail to read fingerprint from backend: %w", err)
 	}
 
 	if bytes.Equal(backendFingerprint, req.LastKnownFingerprint) {
@@ -139,7 +139,7 @@ func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigReque
 	} else {
 		resp, err = service.backend.BuildConfigResponse(req.Resource)
 		if err != nil {
-			return nil, fmt.Errorf("fail GetConfig call: %w", err)
+			return nil, fmt.Errorf("backend fail to build config response: %w", err)
 		}
 	}
 

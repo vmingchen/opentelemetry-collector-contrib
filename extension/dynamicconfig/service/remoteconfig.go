@@ -17,6 +17,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"google.golang.org/grpc"
 
@@ -27,62 +28,42 @@ import (
 type UpdateStrategy uint8
 
 const (
+	// updates cached response on GetFingerprint() and BuildConfigResponse()
 	Default UpdateStrategy = iota
+
+	// updates cached response only on GetFingerprint()
 	OnGetFingerprint
 )
 
 type RemoteConfigBackend struct {
-	target         string
-	conn           *grpc.ClientConn
-	client         pb.DynamicConfigClient
-	updateStrategy UpdateStrategy
-	chs            *responseMonitorChan
+	remoteConfigAddress string
+	conn                *grpc.ClientConn
+	client              pb.DynamicConfigClient
+	updateStrategy      UpdateStrategy
+
+	mu   sync.Mutex
+	resp *pb.ConfigResponse
 }
 
-type responseMonitorChan struct {
-	getResp    chan *pb.ConfigResponse
-	updateResp chan *pb.ConfigResponse
-	quit       chan struct{}
-}
-
-func monitorResponse(chs *responseMonitorChan) {
-	var resp *pb.ConfigResponse
-
-	for {
-		select {
-		case chs.getResp <- resp:
-		case resp = <-chs.updateResp:
-		case <-chs.quit:
-			return
-		}
-	}
-}
-
-func NewRemoteConfigBackend(target string) (*RemoteConfigBackend, error) {
+func NewRemoteConfigBackend(remoteConfigAddress string) (*RemoteConfigBackend, error) {
 	backend := &RemoteConfigBackend{
-		target:         target,
-		conn:           nil,
-		client:         nil,
-		updateStrategy: Default,
-		chs: &responseMonitorChan{
-			getResp:    make(chan *pb.ConfigResponse),
-			updateResp: make(chan *pb.ConfigResponse),
-			quit:       make(chan struct{}),
-		},
+		remoteConfigAddress: remoteConfigAddress,
+		conn:                nil,
+		client:              nil,
+		updateStrategy:      Default,
 	}
 
 	if err := backend.initConn(); err != nil {
 		return nil, err
 	}
 
-	go monitorResponse(backend.chs)
 	return backend, nil
 }
 
 func (backend *RemoteConfigBackend) initConn() error {
 	conn, err := grpc.Dial(
-		backend.target,
-		grpc.WithInsecure(),
+		backend.remoteConfigAddress,
+		grpc.WithInsecure(), // TODO: consider security implications
 	)
 	if err != nil {
 		return fmt.Errorf("remote config backend fail to connect: %w", err)
@@ -108,7 +89,10 @@ func (backend *RemoteConfigBackend) GetFingerprint(resource *res.Resource) ([]by
 		return nil, fmt.Errorf("fail to get fingerprint: %w", err)
 	}
 
-	resp := <-backend.chs.getResp
+	backend.mu.Lock()
+	resp := backend.resp
+	backend.mu.Unlock()
+
 	return resp.Fingerprint, nil
 }
 
@@ -119,14 +103,20 @@ func (backend *RemoteConfigBackend) BuildConfigResponse(resource *res.Resource) 
 		}
 	}
 
-	resp := <-backend.chs.getResp
+	backend.mu.Lock()
+	resp := backend.resp
+	backend.mu.Unlock()
+
 	return resp, nil
 }
 
 func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
+
 	var lastKnownFingerprint []byte
-	if lastResp := <-backend.chs.getResp; lastResp != nil {
-		lastKnownFingerprint = lastResp.Fingerprint
+	if backend.resp != nil {
+		lastKnownFingerprint = backend.resp.Fingerprint
 	}
 
 	req := &pb.ConfigRequest{
@@ -139,14 +129,11 @@ func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
 		return err
 	}
 
-	backend.chs.updateResp <- resp
+	backend.resp = resp
 	return nil
 }
 
 func (backend *RemoteConfigBackend) Close() error {
-	backend.chs.quit <- struct{}{}
-	close(backend.chs.quit)
-
 	if err := backend.conn.Close(); err != nil {
 		return fmt.Errorf("remote config backend fail to close connection: %w", err)
 	}

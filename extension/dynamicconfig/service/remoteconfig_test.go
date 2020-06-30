@@ -22,7 +22,13 @@ import (
 )
 
 func SetUpServer(t *testing.T) (*RemoteConfigBackend, chan struct{}, chan struct{}) {
-	address := ":50052"
+	quit := make(chan struct{})
+	done := make(chan struct{})
+
+	// making mock third-party
+	mockService, _ := NewConfigService(withMockConfig())
+	address := startMockServer(t, mockService, quit, done)
+	<-done
 
 	// making remote backend
 	configService, err := NewConfigService(WithRemoteConfig(address))
@@ -31,14 +37,6 @@ func SetUpServer(t *testing.T) (*RemoteConfigBackend, chan struct{}, chan struct
 	}
 
 	backend := configService.backend.(*RemoteConfigBackend)
-	quit := make(chan struct{})
-	done := make(chan struct{})
-
-	// making mock third-party
-	mockService, _ := NewConfigService(withMockConfig())
-	startMockServer(t, mockService, address, quit, done)
-	<-done
-
 	return backend, quit, done
 }
 
@@ -49,27 +47,6 @@ func TearDownServer(t *testing.T, backend *RemoteConfigBackend, quit chan struct
 	}
 
 	<-done
-}
-
-func TestResponseMonitor(t *testing.T) {
-	chs := &responseMonitorChan{
-		getResp:    make(chan *pb.ConfigResponse),
-		updateResp: make(chan *pb.ConfigResponse),
-		quit:       make(chan struct{}),
-	}
-
-	go monitorResponse(chs)
-
-	if resp := <-chs.getResp; resp != nil {
-		t.Errorf("expected monitored resp to be nil, got: %v", resp)
-	}
-
-	chs.updateResp <- &pb.ConfigResponse{}
-	if resp := <-chs.getResp; resp == nil {
-		t.Errorf("expected empty resp, got nil")
-	}
-
-	chs.quit <- struct{}{}
 }
 
 func TestNewRemoteConfigBackend(t *testing.T) {
@@ -85,13 +62,12 @@ func TestNewRemoteConfigBackend(t *testing.T) {
 	}
 }
 
+// TODO: set nondefault update strategy
 func TestUpdateStrategy(t *testing.T) {
-	configService, err := NewConfigService(WithRemoteConfig("0.0.0.0:55800"))
+	backend, err := NewRemoteConfigBackend("")
 	if err != nil {
-		t.Fatalf("fail to init remote config service: %v", err)
+		t.Fatalf("fail to init remote config backend: %v", err)
 	}
-
-	backend := configService.backend.(*RemoteConfigBackend)
 
 	if strategy := backend.GetUpdateStrategy(); strategy != Default {
 		t.Errorf("expected strategy Default, got %v", strategy)

@@ -54,10 +54,11 @@ func withMockConfig() Option {
 }
 
 // startMockServer is a test utility to start a quick-n-dirty gRPC server.
-func startMockServer(t *testing.T, configService *ConfigService, address string,
-	quit <-chan struct{}, done chan<- struct{}) {
+func startMockServer(t *testing.T, configService *ConfigService,
+	quit <-chan struct{}, done chan<- struct{}) string {
 
-	listen, err := net.Listen("tcp", address)
+	listen, err := net.Listen("tcp", ":0")
+	address := listen.Addr()
 
 	if listen == nil || err != nil {
 		t.Fatalf("fail to listen: %v", err)
@@ -80,4 +81,6 @@ func startMockServer(t *testing.T, configService *ConfigService, address string,
 
 		done <- struct{}{}
 	}()
+
+	return address.String()
 }

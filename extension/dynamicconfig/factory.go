@@ -43,10 +43,10 @@ func (f *Factory) CreateDefaultConfig() configmodels.Extension {
 			TypeVal: typeStr,
 			NameVal: typeStr,
 		},
-		Endpoint:        "0.0.0.0:55700",
-		Target:          "",
-		LocalConfigFile: "dynamic-config-local-schedules.yaml",
-		WaitTime:        30,
+		Endpoint:            "0.0.0.0:55700",
+		RemoteConfigAddress: "",
+		LocalConfigFile:     "dynamic-config-local-schedules.yaml",
+		WaitTime:            30,
 	}
 }
 

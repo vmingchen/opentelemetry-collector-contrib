@@ -27,10 +27,10 @@ import (
 )
 
 type dynamicConfigExtension struct {
-	config        Config
+	config        Config // extension-level configs
 	logger        *zap.Logger
-	server        *grpc.Server
-	configService *service.ConfigService
+	server        *grpc.Server           // gRPC server that physically serves the ConfigService
+	configService *service.ConfigService // implements the gRPC configuration service
 }
 
 func newServer(config Config, logger *zap.Logger) (*dynamicConfigExtension, error) {
