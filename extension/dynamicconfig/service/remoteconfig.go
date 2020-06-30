@@ -32,7 +32,7 @@ const (
 )
 
 type RemoteConfigBackend struct {
-	target		   string
+	target         string
 	conn           *grpc.ClientConn
 	client         pb.DynamicConfigClient
 	updateStrategy UpdateStrategy
@@ -60,7 +60,7 @@ func monitorResponse(chs *responseMonitorChan) {
 
 func NewRemoteConfigBackend(target string) (*RemoteConfigBackend, error) {
 	backend := &RemoteConfigBackend{
-		target: 		target,
+		target:         target,
 		conn:           nil,
 		client:         nil,
 		updateStrategy: Default,
@@ -92,7 +92,6 @@ func (backend *RemoteConfigBackend) initConn() error {
 	backend.client = pb.NewDynamicConfigClient(conn)
 	return nil
 }
-
 
 func (backend *RemoteConfigBackend) GetUpdateStrategy() UpdateStrategy {
 	return backend.updateStrategy
@@ -146,8 +145,8 @@ func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
 
 func (backend *RemoteConfigBackend) Close() error {
 	backend.chs.quit <- struct{}{}
+	close(backend.chs.quit)
 
-	// TODO: gRPC connection seems to take inordinately long to close
 	if err := backend.conn.Close(); err != nil {
 		return fmt.Errorf("remote config backend fail to close connection: %w", err)
 	}

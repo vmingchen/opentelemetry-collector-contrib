@@ -54,10 +54,10 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 }
 
 type serviceBuilder struct {
-	target   string
-	filepath string
+	target         string
+	filepath       string
 	updateStrategy UpdateStrategy
-	waitTime int32
+	waitTime       int32
 
 	// overrides build() to use this given backend.
 	// NOTE: intended for testing only!
@@ -76,7 +76,7 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 			return nil, err
 		}
 
-		if builder.updateStrategy != 0{
+		if builder.updateStrategy != 0 {
 			backend.SetUpdateStrategy(builder.updateStrategy)
 		}
 

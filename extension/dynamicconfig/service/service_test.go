@@ -32,10 +32,6 @@ func TestNewConfigService(t *testing.T) {
 	}
 }
 
-func TestRemoteConfigOption(t *testing.T) {
-	t.Errorf("unimplemented")
-}
-
 func TestLocalConfigOption(t *testing.T) {
 	if service, err := NewConfigService(WithLocalConfig("woot.yaml")); service != nil || err == nil {
 		t.Errorf("file does not exist but service created: %v: %v", service, err)

@@ -16,7 +16,6 @@ package dynamicconfig
 
 import (
 	"context"
-	"fmt"
 	"net"
 
 	"go.opentelemetry.io/collector/component"
@@ -27,7 +26,6 @@ import (
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
-// TODO: config update to use target
 type dynamicConfigExtension struct {
 	config        Config
 	logger        *zap.Logger

@@ -28,6 +28,11 @@ var mockResponse = &pb.ConfigResponse{
 	Fingerprint: mockFingerprint,
 }
 
+func alterFingerprint(newFingerprint []byte) {
+	mockFingerprint = newFingerprint
+	mockResponse.Fingerprint = mockFingerprint
+}
+
 type mockBackend struct{}
 
 func (mock *mockBackend) GetFingerprint(_ *res.Resource) ([]byte, error) {
