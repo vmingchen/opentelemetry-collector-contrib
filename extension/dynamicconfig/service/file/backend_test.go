@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
+package file
 
 import (
 	"bytes"
@@ -22,17 +22,17 @@ import (
 	"time"
 )
 
-func TestNewLocalConfig(t *testing.T) {
-	if _, err := NewLocalConfigBackend("woot.txt"); err == nil {
+func TestNewFileConfig(t *testing.T) {
+	if _, err := NewBackend("woot.txt"); err == nil {
 		t.Errorf("failed to catch nonexistant config file")
 	}
 
-	if _, err := NewLocalConfigBackend("../testdata/schedules_bad.yaml"); err == nil {
+	if _, err := NewBackend("../../testdata/schedules_bad.yaml"); err == nil {
 		t.Errorf("failed to catch impropoer config file")
 	}
 
-	if _, err := NewLocalConfigBackend("../testdata/schedules.yaml"); err != nil {
-		t.Errorf("failed to read config file")
+	if _, err := NewBackend("../../testdata/schedules.yaml"); err != nil {
+		t.Fatalf("failed to read config file")
 	}
 }
 
@@ -47,7 +47,7 @@ func TestUpdateConfig(t *testing.T) {
 
 	writeString(t, tmpfile, originalSchedule)
 
-	backend, err := NewLocalConfigBackend(tmpfile.Name())
+	backend, err := NewBackend(tmpfile.Name())
 	if err != nil {
 		t.Errorf("fail to create backend: %v", err)
 	}
@@ -102,10 +102,10 @@ func makeTimeout(dur time.Duration) <-chan struct{} {
 	return timeout
 }
 
-func TestGetFingerprintLocal(t *testing.T) {
-	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+func TestGetFingerprint(t *testing.T) {
+	backend, err := NewBackend("../../testdata/schedules.yaml")
 	if err != nil {
-		t.Errorf("failed to read config file")
+		t.Fatalf("failed to read config file")
 	}
 
 	fingerprint := backend.metricConfig.Hash()
@@ -120,10 +120,10 @@ func TestGetFingerprintLocal(t *testing.T) {
 	}
 }
 
-func TestBuildConfigResponseLocal(t *testing.T) {
-	backend, err := NewLocalConfigBackend("../testdata/schedules.yaml")
+func TestBuildConfigResponse(t *testing.T) {
+	backend, err := NewBackend("../../testdata/schedules.yaml")
 	if err != nil {
-		t.Errorf("failed to read config file")
+		t.Fatalf("failed to read config file")
 	}
 
 	resp, err := backend.BuildConfigResponse(nil)
@@ -133,5 +133,20 @@ func TestBuildConfigResponseLocal(t *testing.T) {
 
 	if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
 		t.Errorf("config response incomplete: %v", resp)
+	}
+}
+
+func TestWaitTime(t *testing.T) {
+	backend := &Backend{}
+	backend.SetWaitTime(3)
+
+	if backend.GetWaitTime() != 3 {
+		t.Errorf("fail to set waittime: expected %v, got %v", 3, backend.waitTime)
+	}
+
+	backend.SetWaitTime(-1)
+
+	if backend.GetWaitTime() != 3 {
+		t.Errorf("fail to catch incorrect waittime: expected %v, got %v", 3, backend.waitTime)
 	}
 }

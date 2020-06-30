@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
+package file
 
 import (
 	"fmt"
@@ -28,10 +28,10 @@ import (
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
-// LocalConfigBackend is a ConfigBackend that uses a local file to determine
+// file.Backend is a ConfigBackend that uses a local file to determine
 // what schedules to change. The file is read live, so changes to it will
 // reflect immediately in the configs.
-type LocalConfigBackend struct {
+type Backend struct {
 	viper *viper.Viper
 
 	mu           sync.Mutex
@@ -42,8 +42,8 @@ type LocalConfigBackend struct {
 	updateCh chan struct{} // syncs updates; meant for testing
 }
 
-func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
-	backend := &LocalConfigBackend{
+func NewBackend(configFile string) (*Backend, error) {
+	backend := &Backend{
 		viper:    config.NewViper(),
 		waitTime: 30,
 	}
@@ -71,7 +71,7 @@ func NewLocalConfigBackend(configFile string) (*LocalConfigBackend, error) {
 	return backend, nil
 }
 
-func (backend *LocalConfigBackend) updateConfig() error {
+func (backend *Backend) updateConfig() error {
 	var config model.MetricConfig
 	if err := backend.viper.UnmarshalExact(&config); err != nil {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
@@ -90,7 +90,7 @@ func hashConfig(obj *model.MetricConfig) []byte {
 	return obj.Hash()
 }
 
-func (backend *LocalConfigBackend) GetFingerprint(_ *res.Resource) ([]byte, error) {
+func (backend *Backend) GetFingerprint(_ *res.Resource) ([]byte, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
@@ -99,7 +99,7 @@ func (backend *LocalConfigBackend) GetFingerprint(_ *res.Resource) ([]byte, erro
 	return fingerprint, nil
 }
 
-func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
+func (backend *Backend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
@@ -110,7 +110,17 @@ func (backend *LocalConfigBackend) BuildConfigResponse(_ *res.Resource) (*pb.Con
 	}, nil
 }
 
-func (backend *LocalConfigBackend) Close() error {
+func (backend *Backend) GetWaitTime() int32 {
+	return backend.waitTime
+}
+
+func (backend *Backend) SetWaitTime(waitTime int32) {
+	if waitTime > 0 {
+		backend.waitTime = waitTime
+	}
+}
+
+func (backend *Backend) Close() error {
 	// TODO: need to cleanup Viper resources?
 	return nil
 }

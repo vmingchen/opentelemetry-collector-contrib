@@ -19,6 +19,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/file"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -27,7 +29,7 @@ func TestNewConfigService(t *testing.T) {
 		t.Errorf("no backend specified but service created: %v: %v", service, err)
 	}
 
-	if service, err := NewConfigService(withMockConfig()); service == nil || err != nil {
+	if service, err := NewConfigService(WithMockBackend()); service == nil || err != nil {
 		t.Errorf("backend specified but service not created: %v: %v", service, err)
 	}
 }
@@ -54,7 +56,7 @@ func TestWaitTimeConfigOption(t *testing.T) {
 		t.Errorf("file exists but service not created: %v: %v", service, err)
 	}
 
-	time := service.backend.(*LocalConfigBackend).waitTime
+	time := service.backend.(*file.Backend).GetWaitTime()
 	if time != testWaitTime {
 		t.Errorf("wait time of %d requested, found %d", testWaitTime, time)
 	}
@@ -62,16 +64,16 @@ func TestWaitTimeConfigOption(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
-	service, err := NewConfigService(withMockConfig())
-	sameFingerprintReq := pb.ConfigRequest{LastKnownFingerprint: mockFingerprint}
+	service, err := NewConfigService(WithMockBackend())
+	sameFingerprintReq := pb.ConfigRequest{LastKnownFingerprint: mock.GlobalFingerprint}
 
 	resp, err := service.GetConfig(context.Background(), &sameFingerprintReq)
 	if err != nil {
 		t.Errorf("failed to get config: %v", err)
 	}
 
-	if !bytes.Equal(resp.Fingerprint, mockFingerprint) {
-		t.Errorf("expected fingerprint to equal %v: got %v", mockFingerprint, resp.Fingerprint)
+	if !bytes.Equal(resp.Fingerprint, mock.GlobalFingerprint) {
+		t.Errorf("expected fingerprint to equal %v: got %v", mock.GlobalFingerprint, resp.Fingerprint)
 	}
 
 	blankReq := pb.ConfigRequest{}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
+package remote
 
 import (
 	"context"
@@ -35,7 +35,7 @@ const (
 	OnGetFingerprint
 )
 
-type RemoteConfigBackend struct {
+type Backend struct {
 	remoteConfigAddress string
 	conn                *grpc.ClientConn
 	client              pb.DynamicConfigClient
@@ -45,8 +45,8 @@ type RemoteConfigBackend struct {
 	resp *pb.ConfigResponse
 }
 
-func NewRemoteConfigBackend(remoteConfigAddress string) (*RemoteConfigBackend, error) {
-	backend := &RemoteConfigBackend{
+func NewBackend(remoteConfigAddress string) (*Backend, error) {
+	backend := &Backend{
 		remoteConfigAddress: remoteConfigAddress,
 		conn:                nil,
 		client:              nil,
@@ -60,7 +60,7 @@ func NewRemoteConfigBackend(remoteConfigAddress string) (*RemoteConfigBackend, e
 	return backend, nil
 }
 
-func (backend *RemoteConfigBackend) initConn() error {
+func (backend *Backend) initConn() error {
 	conn, err := grpc.Dial(
 		backend.remoteConfigAddress,
 		grpc.WithInsecure(), // TODO: consider security implications
@@ -74,17 +74,17 @@ func (backend *RemoteConfigBackend) initConn() error {
 	return nil
 }
 
-func (backend *RemoteConfigBackend) GetUpdateStrategy() UpdateStrategy {
+func (backend *Backend) GetUpdateStrategy() UpdateStrategy {
 	return backend.updateStrategy
 }
 
-func (backend *RemoteConfigBackend) SetUpdateStrategy(strategy UpdateStrategy) {
+func (backend *Backend) SetUpdateStrategy(strategy UpdateStrategy) {
 	if strategy == Default || strategy == OnGetFingerprint {
 		backend.updateStrategy = strategy
 	}
 }
 
-func (backend *RemoteConfigBackend) GetFingerprint(resource *res.Resource) ([]byte, error) {
+func (backend *Backend) GetFingerprint(resource *res.Resource) ([]byte, error) {
 	if err := backend.syncRemote(resource); err != nil {
 		return nil, fmt.Errorf("fail to get fingerprint: %w", err)
 	}
@@ -96,7 +96,7 @@ func (backend *RemoteConfigBackend) GetFingerprint(resource *res.Resource) ([]by
 	return resp.Fingerprint, nil
 }
 
-func (backend *RemoteConfigBackend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
+func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
 	if backend.updateStrategy == Default {
 		if err := backend.syncRemote(resource); err != nil {
 			return nil, fmt.Errorf("fail to build config resp: %w", err)
@@ -110,7 +110,7 @@ func (backend *RemoteConfigBackend) BuildConfigResponse(resource *res.Resource) 
 	return resp, nil
 }
 
-func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
+func (backend *Backend) syncRemote(resource *res.Resource) error {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
@@ -133,7 +133,7 @@ func (backend *RemoteConfigBackend) syncRemote(resource *res.Resource) error {
 	return nil
 }
 
-func (backend *RemoteConfigBackend) Close() error {
+func (backend *Backend) Close() error {
 	if err := backend.conn.Close(); err != nil {
 		return fmt.Errorf("remote config backend fail to close connection: %w", err)
 	}

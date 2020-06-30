@@ -20,6 +20,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/file"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
@@ -40,7 +43,7 @@ type ConfigService struct {
 }
 
 func NewConfigService(opts ...Option) (*ConfigService, error) {
-	builder := &serviceBuilder{}
+	builder := &ServiceBuilder{}
 	for _, opt := range opts {
 		opt(builder)
 	}
@@ -53,10 +56,10 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 	return &ConfigService{backend: backend}, nil
 }
 
-type serviceBuilder struct {
+type ServiceBuilder struct {
 	remoteConfigAddress string
 	filepath            string
-	updateStrategy      UpdateStrategy
+	updateStrategy      remote.UpdateStrategy
 	waitTime            int32
 
 	// overrides build() to use this given backend.
@@ -65,13 +68,13 @@ type serviceBuilder struct {
 }
 
 // TODO: implement LocalConfigBackend as fall-back
-func (builder *serviceBuilder) build() (ConfigBackend, error) {
+func (builder *ServiceBuilder) build() (ConfigBackend, error) {
 	if builder.backend != nil {
 		return builder.backend, nil
 	}
 
 	if builder.remoteConfigAddress != "" {
-		backend, err := NewRemoteConfigBackend(builder.remoteConfigAddress)
+		backend, err := remote.NewBackend(builder.remoteConfigAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -84,13 +87,13 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 	}
 
 	if builder.filepath != "" {
-		backend, err := NewLocalConfigBackend(builder.filepath)
+		backend, err := file.NewBackend(builder.filepath)
 		if err != nil {
 			return nil, err
 		}
 
 		if builder.waitTime > 0 {
-			backend.waitTime = builder.waitTime
+			backend.SetWaitTime(builder.waitTime)
 		}
 
 		return backend, nil
@@ -100,29 +103,36 @@ func (builder *serviceBuilder) build() (ConfigBackend, error) {
 	return nil, errors.New("missing backend specification")
 }
 
-type Option func(*serviceBuilder)
+type Option func(*ServiceBuilder)
 
 func WithRemoteConfig(remoteConfigAddress string) Option {
-	return func(builder *serviceBuilder) {
+	return func(builder *ServiceBuilder) {
 		builder.remoteConfigAddress = remoteConfigAddress
 	}
 }
 
-func WithUpdateStrategy(strategy UpdateStrategy) Option {
-	return func(builder *serviceBuilder) {
+func WithUpdateStrategy(strategy remote.UpdateStrategy) Option {
+	return func(builder *ServiceBuilder) {
 		builder.updateStrategy = strategy
 	}
 }
 
 func WithLocalConfig(filepath string) Option {
-	return func(builder *serviceBuilder) {
+	return func(builder *ServiceBuilder) {
 		builder.filepath = filepath
 	}
 }
 
 func WithWaitTime(time int32) Option {
-	return func(builder *serviceBuilder) {
+	return func(builder *ServiceBuilder) {
 		builder.waitTime = time
+	}
+}
+
+// NOTE: intended for testing only!
+func WithMockBackend() Option {
+	return func(builder *ServiceBuilder) {
+		builder.backend = &mock.Backend{}
 	}
 }
 
