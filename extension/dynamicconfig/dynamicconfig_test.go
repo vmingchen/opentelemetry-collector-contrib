@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/testutils"
 )

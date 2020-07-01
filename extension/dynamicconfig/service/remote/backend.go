@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc"
 
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
 type UpdateStrategy uint8

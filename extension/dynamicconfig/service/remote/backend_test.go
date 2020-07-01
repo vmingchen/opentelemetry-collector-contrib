@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package remote
+package remote_test
 
 import (
 	"bytes"
 	"net"
 	"testing"
 
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
-	"github.com/vmingchen/opentelemetry-collector-contrib/extension/dynamicconfig/service"
-	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	"google.golang.org/grpc"
 )
 
@@ -57,7 +58,7 @@ func StartServer(t *testing.T, quit <-chan struct{}, done chan<- struct{}) strin
 	return address.String()
 }
 
-func SetUpServer(t *testing.T) (*Backend, chan struct{}, chan struct{}) {
+func SetUpServer(t *testing.T) (*remote.Backend, chan struct{}, chan struct{}) {
 	quit := make(chan struct{})
 	done := make(chan struct{})
 
@@ -66,7 +67,7 @@ func SetUpServer(t *testing.T) (*Backend, chan struct{}, chan struct{}) {
 	<-done
 
 	// making remote backend
-	backend, err := NewBackend(address)
+	backend, err := remote.NewBackend(address)
 	if err != nil {
 		t.Fatalf("fail to init remote config backend")
 	}
@@ -74,7 +75,7 @@ func SetUpServer(t *testing.T) (*Backend, chan struct{}, chan struct{}) {
 	return backend, quit, done
 }
 
-func TearDownServer(t *testing.T, backend *Backend, quit chan struct{}, done chan struct{}) {
+func TearDownServer(t *testing.T, backend *remote.Backend, quit chan struct{}, done chan struct{}) {
 	quit <- struct{}{}
 	if err := backend.Close(); err != nil {
 		t.Errorf("fail to close backend: %v", err)
@@ -84,39 +85,32 @@ func TearDownServer(t *testing.T, backend *Backend, quit chan struct{}, done cha
 }
 
 func TestNewBackend(t *testing.T) {
-	backend, quit, done := SetUpServer(t)
-	defer TearDownServer(t, backend, quit, done)
-
-	if err := backend.initConn(); err != nil {
-		t.Fatalf("failed to connect: %v", err)
-	}
-
-	if backend.conn == nil || backend.client == nil {
-		t.Errorf("connection structs not properly instantiated")
+	if _, err := remote.NewBackend(":0"); err != nil {
+		t.Errorf("fail to initialize a new remote backend: %v", err)
 	}
 }
 
 // TODO: set nondefault update strategy
 func TestUpdateStrategy(t *testing.T) {
-	backend, err := NewBackend("")
+	backend, err := remote.NewBackend("")
 	if err != nil {
 		t.Fatalf("fail to init remote config backend: %v", err)
 	}
 
-	if strategy := backend.GetUpdateStrategy(); strategy != Default {
+	if strategy := backend.GetUpdateStrategy(); strategy != remote.Default {
 		t.Errorf("expected strategy Default, got %v", strategy)
 	}
 
-	backend.SetUpdateStrategy(OnGetFingerprint)
+	backend.SetUpdateStrategy(remote.OnGetFingerprint)
 
-	if strategy := backend.GetUpdateStrategy(); strategy != OnGetFingerprint {
+	if strategy := backend.GetUpdateStrategy(); strategy != remote.OnGetFingerprint {
 		t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
 	}
 
-	const NonsenseStrategy UpdateStrategy = 255
+	const NonsenseStrategy remote.UpdateStrategy = 255
 	backend.SetUpdateStrategy(NonsenseStrategy)
 
-	if strategy := backend.GetUpdateStrategy(); strategy != OnGetFingerprint {
+	if strategy := backend.GetUpdateStrategy(); strategy != remote.OnGetFingerprint {
 		t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
 	}
 }
@@ -147,7 +141,7 @@ func TestBuildConfigResponseRemote(t *testing.T) {
 	newFingerprint := []byte("actually, I believe Gretchen was a cow")
 	mock.AlterFingerprint(newFingerprint)
 
-	backend.SetUpdateStrategy(OnGetFingerprint)
+	backend.SetUpdateStrategy(remote.OnGetFingerprint)
 
 	resp = buildResp(t, backend)
 	if bytes.Equal(resp.Fingerprint, mock.GlobalResponse.Fingerprint) {
@@ -162,7 +156,7 @@ func TestBuildConfigResponseRemote(t *testing.T) {
 	}
 }
 
-func buildResp(t *testing.T, backend *Backend) *pb.ConfigResponse {
+func buildResp(t *testing.T, backend *remote.Backend) *pb.ConfigResponse {
 	resp, err := backend.BuildConfigResponse(nil)
 	if err != nil {
 		t.Errorf("fail to build config response: %v", err)
