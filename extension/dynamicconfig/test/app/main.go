@@ -14,7 +14,7 @@
 
 // +build integration
 
-package test
+package main
 
 import (
 	"context"
@@ -63,7 +63,7 @@ func initProvider() (*otlp.Exporter, *push.Controller) {
 	return exp, pusher
 }
 
-func runSampleApp(quit <-chan struct{}) {
+func main() {
 	exp, pusher := initProvider()
 	defer func() { handleErr(exp.Stop(), "Failed to stop exporter") }()
 	defer pusher.Stop() // pushes any last exports to the receiver
@@ -79,13 +79,8 @@ func runSampleApp(quit <-chan struct{}) {
 	defer valuerecorder.Unbind()
 
 	for {
-		select {
-		case <-quit:
-			return
-		default:
-			valuerecorder.Add(context.Background(), 1.0)
-			time.Sleep(time.Millisecond * 500)
-		}
+		valuerecorder.Add(context.Background(), 1.0)
+		time.Sleep(time.Millisecond * 500)
 	}
 
 }

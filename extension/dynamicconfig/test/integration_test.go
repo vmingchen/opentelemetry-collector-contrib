@@ -28,25 +28,27 @@ import (
 )
 
 // TODO: double check build target works
+// TODO: add log capture to verify behavior <-- STOPPED HERE
 func TestIntegration(t *testing.T) {
 	if testing.Short() {
-		t.Log("warning: not recompiling otelcontribcol: omit -test.short flag to compile new binary")
+		t.Log("warning: not recompiling binaries: omit -test.short flag to compile new binaries")
 	} else {
 		t.Log("building new collector")
 		buildCollector(t)
+
+		t.Log("building new sample app")
+		buildSampleApp(t)
 	}
 
 	t.Log("starting file backend test")
-	cmd := startCollectorWithFileBackend(t)
-	defer cmd.Process.Kill()
+	backendCmd := startCollectorWithFileBackend(t)
+	defer backendCmd.Process.Kill()
 
 	t.Log("starting sample application")
-	quit := make(chan struct{})
-	go runSampleApp(quit)
+	appCmd := startSampleApp(t)
+	defer appCmd.Process.Kill()
 
-	time.Sleep(10 * time.Second)
-	quit <- struct{}{}
-
+	time.Sleep(20 * time.Second)
 }
 
 func buildCollector(t *testing.T) {
@@ -55,6 +57,16 @@ func buildCollector(t *testing.T) {
 
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("fail to compile otelcontribcol: %v", err)
+	}
+}
+
+// TODO: omit compiled main app
+func buildSampleApp(t *testing.T) {
+	cmd := exec.Command("go", "build", "main.go")
+	cmd.Dir = "app"
+
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("fail to compile sample app: %v", err)
 	}
 }
 
@@ -81,6 +93,16 @@ func startCollectorWithFileBackend(t *testing.T) *exec.Cmd {
 	}
 
 	<-done
+	return cmd
+}
+
+func startSampleApp(t *testing.T) *exec.Cmd {
+	cmd := exec.Command("app/main")
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("fail to start app: %v", err)
+	}
+
 	return cmd
 }
 

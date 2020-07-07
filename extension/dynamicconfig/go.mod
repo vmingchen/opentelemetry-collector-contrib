@@ -9,9 +9,6 @@ require (
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/collector v0.5.0
-	go.opentelemetry.io/contrib/exporters/metric/dynamicconfig v0.0.0-00010101000000-000000000000
-	go.opentelemetry.io/otel v0.7.0
-	go.opentelemetry.io/otel/exporters/otlp v0.7.0
 	go.uber.org/zap v1.13.0
 	google.golang.org/grpc v1.30.0
 )
