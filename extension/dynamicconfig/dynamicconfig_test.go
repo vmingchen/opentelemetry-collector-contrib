@@ -27,12 +27,12 @@ import (
 
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	"go.opentelemetry.io/collector/component/componenttest"
-	"go.opentelemetry.io/collector/testutils"
+	"go.opentelemetry.io/collector/testutil"
 )
 
 func TestDyconfigExtensionUsage(t *testing.T) {
 	config := Config{
-		Endpoint:        testutils.GetAvailableLocalAddress(t),
+		Endpoint:        testutil.GetAvailableLocalAddress(t),
 		LocalConfigFile: "testdata/schedules.yaml",
 	}
 
@@ -62,7 +62,7 @@ func TestDyconfigExtensionUsage(t *testing.T) {
 }
 
 func TestDyconfigExtensionPortAlreadyInUse(t *testing.T) {
-	endpoint := testutils.GetAvailableLocalAddress(t)
+	endpoint := testutil.GetAvailableLocalAddress(t)
 	ln, err := net.Listen("tcp", endpoint)
 	require.NoError(t, err)
 	defer ln.Close()
@@ -80,7 +80,7 @@ func TestDyconfigExtensionPortAlreadyInUse(t *testing.T) {
 
 func TestDyconfigMultipleStarts(t *testing.T) {
 	config := Config{
-		Endpoint:        testutils.GetAvailableLocalAddress(t),
+		Endpoint:        testutil.GetAvailableLocalAddress(t),
 		LocalConfigFile: "testdata/schedules.yaml",
 	}
 
@@ -97,7 +97,7 @@ func TestDyconfigMultipleStarts(t *testing.T) {
 
 func TestDyconfigMultipleShutdowns(t *testing.T) {
 	config := Config{
-		Endpoint:        testutils.GetAvailableLocalAddress(t),
+		Endpoint:        testutil.GetAvailableLocalAddress(t),
 		LocalConfigFile: "testdata/schedules.yaml",
 	}
 
@@ -112,7 +112,7 @@ func TestDyconfigMultipleShutdowns(t *testing.T) {
 
 func TestDyconfigShutdownWithoutStart(t *testing.T) {
 	config := Config{
-		Endpoint:        testutils.GetAvailableLocalAddress(t),
+		Endpoint:        testutil.GetAvailableLocalAddress(t),
 		LocalConfigFile: "testdata/schedules.yaml",
 	}
 

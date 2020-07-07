@@ -38,11 +38,13 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/wavefrontreceiver v0.0.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinscribereceiver v0.0.0
 	github.com/pavius/impi v0.0.0-20180302134524-c1cbdcb8df2b
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/tcnksm/ghr v0.13.0
 	go.opentelemetry.io/collector v0.5.0
 	honnef.co/go/tools v0.0.1-2020.1.3
 )
+
+replace go.opentelemetry.io/collector => ../../open-telemetry/opentelemetry-collector
 
 replace git.apache.org/thrift.git v0.12.0 => github.com/apache/thrift v0.12.0
 
@@ -87,6 +89,11 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/obse
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig => ./extension/dynamicconfig
 
+replace go.opentelemetry.io/contrib/exporters/metric/dynamicconfig => ../opentelemetry-go-contrib/exporters/metric/dynamicconfig
+
+// force v1.29.0
+replace google.golang.org/grpc => ../../../google.golang.org/grpc
+
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/carbonreceiver => ./receiver/carbonreceiver
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/collectdreceiver => ./receiver/collectdreceiver
@@ -117,4 +124,4 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/reso
 
 replace k8s.io/client-go => k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
 
-replace github.com/vmingchen/opentelemetry-proto => ../opentelemetry-proto
+replace github.com/open-telemetry/opentelemetry-proto => ../opentelemetry-proto

@@ -23,8 +23,8 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/file"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
-	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 // ConfigBackend defines a general backend that the service can read
