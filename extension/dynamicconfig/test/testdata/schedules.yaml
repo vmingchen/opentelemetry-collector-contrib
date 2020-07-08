@@ -1,4 +1,2 @@
 Schedules:
-    - InclusionPatterns:
-          - StartsWith: "*"
-      Period: "SEC_1"
+    - Period: SEC_5
