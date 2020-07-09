@@ -10,16 +10,9 @@ require (
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/collector v0.5.0
 	go.uber.org/zap v1.13.0
-	google.golang.org/grpc v1.30.0
+	google.golang.org/grpc v1.29.1
 )
 
-replace github.com/open-telemetry/opentelemetry-proto => ../../../opentelemetry-proto
-
-replace go.opentelemetry.io/contrib => ../../../opentelemetry-go-contrib
-
-replace go.opentelemetry.io/contrib/exporters/metric/dynamicconfig => ../../../opentelemetry-go-contrib/exporters/metric/dynamicconfig
+replace github.com/open-telemetry/opentelemetry-proto => github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig => ./
-
-// force v1.29.0
-replace google.golang.org/grpc => ../../../../../google.golang.org/grpc

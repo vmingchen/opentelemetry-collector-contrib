@@ -21,8 +21,8 @@ import (
 	"time"
 )
 
-func testFileBackend(t *testing.T) {
-	t.Log("starting file backend test")
+func testRemoteBackend(t *testing.T) {
+	t.Log("starting remote backend test")
 	sec1Schedule := `Schedules:
     - Period: SEC_1`
 	sec5Schedule := `Schedules:
@@ -32,8 +32,18 @@ func testFileBackend(t *testing.T) {
 	writeString(t, schedFile, sec1Schedule)
 
 	t.Log("starting file backend collector")
-	backendCmd, stderr := startCollector(t, "testdata/file-backend-config.yaml", ":8888")
-	defer backendCmd.Process.Kill()
+	fileBackendCmd, _ := startCollector(t,
+		"testdata/thirdparty-backend-config.yaml",
+		":8888",
+	)
+	defer fileBackendCmd.Process.Kill()
+
+	t.Log("starting remote backend collector")
+	remoteBackendCmd, stderr := startCollector(t,
+		"testdata/remote-backend-config.yaml",
+		":8889",
+	)
+	defer remoteBackendCmd.Process.Kill()
 
 	t.Log("starting sample application")
 	appCmd := startSampleApp(t)

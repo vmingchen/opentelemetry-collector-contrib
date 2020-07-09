@@ -90,7 +90,6 @@ func TestNewBackend(t *testing.T) {
 	}
 }
 
-// TODO: set nondefault update strategy
 func TestUpdateStrategy(t *testing.T) {
 	backend, err := remote.NewBackend("")
 	if err != nil {

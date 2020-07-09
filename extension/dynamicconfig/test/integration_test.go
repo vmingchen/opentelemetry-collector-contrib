@@ -22,7 +22,6 @@ import (
 )
 
 // TODO: double check build target works
-// TODO: add log capture to verify behavior <-- STOPPED HERE
 // tiem occurrences, with leeway to adjust for variability (n samples)
 func TestIntegration(t *testing.T) {
 	if testing.Short() {
@@ -36,6 +35,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	testFileBackend(t)
+	testRemoteBackend(t)
 }
 
 func buildCollector(t *testing.T) {

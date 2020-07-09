@@ -45,7 +45,7 @@ func (f *Factory) CreateDefaultConfig() configmodels.Extension {
 		},
 		Endpoint:            "0.0.0.0:55700",
 		RemoteConfigAddress: "",
-		LocalConfigFile:     "dynamic-config-local-schedules.yaml",
+		LocalConfigFile:     "schedules.yaml",
 		WaitTime:            30,
 	}
 }
@@ -57,7 +57,7 @@ func (f *Factory) CreateExtension(ctx context.Context, params component.Extensio
 		return nil, errors.New("\"endpoint\" is required when using the \"dynamicconfig\" extension")
 	}
 
-	if config.LocalConfigFile == "" { // TODO: and check that remote config service not used
+	if config.LocalConfigFile == "" && config.RemoteConfigAddress == "" {
 		return nil, errors.New("\" local_config_file is required when a remote configuration service is not specified\"")
 	}
 

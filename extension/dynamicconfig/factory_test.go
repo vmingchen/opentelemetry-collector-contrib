@@ -44,7 +44,7 @@ func TestFactory_CreateDefaultConfig(t *testing.T) {
 		},
 		Endpoint:            "0.0.0.0:55700",
 		RemoteConfigAddress: "",
-		LocalConfigFile:     "dynamic-config-local-schedules.yaml",
+		LocalConfigFile:     "schedules.yaml",
 		WaitTime:            30,
 	}, cfg)
 

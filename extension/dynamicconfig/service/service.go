@@ -67,7 +67,6 @@ type ServiceBuilder struct {
 	backend ConfigBackend
 }
 
-// TODO: implement LocalConfigBackend as fall-back
 func (builder *ServiceBuilder) build() (ConfigBackend, error) {
 	if builder.backend != nil {
 		return builder.backend, nil

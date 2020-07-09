@@ -15,14 +15,15 @@
 package remote
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sync"
 
 	"google.golang.org/grpc"
 
-	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 type UpdateStrategy uint8
@@ -129,7 +130,9 @@ func (backend *Backend) syncRemote(resource *res.Resource) error {
 		return err
 	}
 
-	backend.resp = resp
+	if backend.resp == nil || !bytes.Equal(backend.resp.Fingerprint, resp.Fingerprint) {
+		backend.resp = resp
+	}
 	return nil
 }
 

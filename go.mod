@@ -89,10 +89,8 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/obse
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig => ./extension/dynamicconfig
 
-replace go.opentelemetry.io/contrib/exporters/metric/dynamicconfig => ../opentelemetry-go-contrib/exporters/metric/dynamicconfig
-
-// force v1.29.0
-replace google.golang.org/grpc => ../../../google.golang.org/grpc
+// module with dynamicconfig protocols
+replace github.com/open-telemetry/opentelemetry-proto => github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/carbonreceiver => ./receiver/carbonreceiver
 
@@ -123,5 +121,3 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sp
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor => ./processor/resourcedetectionprocessor/
 
 replace k8s.io/client-go => k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
-
-replace github.com/open-telemetry/opentelemetry-proto => ../opentelemetry-proto
