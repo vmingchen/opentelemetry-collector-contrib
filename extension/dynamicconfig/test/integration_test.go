@@ -22,7 +22,6 @@ import (
 )
 
 // TODO: double check build target works
-// tiem occurrences, with leeway to adjust for variability (n samples)
 func TestIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Log("warning: not recompiling binaries: omit -short flag to compile new binaries")

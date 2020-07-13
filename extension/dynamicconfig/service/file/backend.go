@@ -24,8 +24,8 @@ import (
 	"go.opentelemetry.io/collector/config"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/model"
-	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 // file.Backend is a ConfigBackend that uses a local file to determine
@@ -34,9 +34,9 @@ import (
 type Backend struct {
 	viper *viper.Viper
 
-	mu           sync.Mutex
-	metricConfig *model.MetricConfig
-	fingerprint  []byte
+	mu          sync.Mutex
+	configModel model.Config
+	fingerprint []byte
 
 	waitTime int32
 	updateCh chan struct{} // syncs updates; meant for testing
@@ -71,24 +71,25 @@ func NewBackend(configFile string) (*Backend, error) {
 	return backend, nil
 }
 
+// TODO update fingerprint scheme
 func (backend *Backend) updateConfig() error {
-	var config model.MetricConfig
-	if err := backend.viper.UnmarshalExact(&config); err != nil {
+	var configModel model.Config
+	if err := backend.viper.UnmarshalExact(configModel); err != nil {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
 	}
 
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
-	backend.metricConfig = &config
-	backend.fingerprint = hashConfig(&config)
+	backend.configModel = configModel
+	// backend.fingerprint = hashConfig(configBlocks)
 
 	return nil
 }
 
-func hashConfig(obj *model.MetricConfig) []byte {
-	return obj.Hash()
-}
+// func hashConfig(obj *model.ConfigBlock) []byte {
+// 	return obj.Hash()
+// }
 
 func (backend *Backend) GetFingerprint(_ *res.Resource) ([]byte, error) {
 	backend.mu.Lock()
@@ -104,8 +105,8 @@ func (backend *Backend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse
 	defer backend.mu.Unlock()
 
 	return &pb.ConfigResponse{
-		Fingerprint:          backend.fingerprint,
-		MetricConfig:         backend.metricConfig.Proto(),
+		// Fingerprint:          backend.fingerprint,
+		// MetricConfig:         backend.metricConfig.Proto(),
 		SuggestedWaitTimeSec: backend.waitTime,
 	}, nil
 }
