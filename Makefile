@@ -9,7 +9,7 @@ BUILD_X1=-X $(BUILD_INFO_IMPORT_PATH).GitHash=$(GIT_SHA)
 ifdef VERSION
 BUILD_X2=-X $(BUILD_INFO_IMPORT_PATH).Version=$(VERSION)
 endif
-BUILD_X3=-X github.com/open-telemetry/opentelemetry-collector/internal/version.BuildType=$(BUILD_TYPE)
+BUILD_X3=-X go.opentelemetry.io/collector/internal/version.BuildType=$(BUILD_TYPE)
 BUILD_INFO=-ldflags "${BUILD_X1} ${BUILD_X2} ${BUILD_X3}"
 STATIC_CHECK=staticcheck
 OTEL_VERSION=master
@@ -32,7 +32,7 @@ e2e-test: otelcontribcol
 .PHONY: test-with-cover
 unit-tests-with-cover:
 	@echo Verifying that all packages have test files to count in coverage
-	@scripts/check-test-files.sh $(subst github.com/open-telemetry/opentelemetry-collector-contrib/,./,$(ALL_PKGS))
+	@internal/buildscripts/check-test-files.sh $(subst github.com/open-telemetry/opentelemetry-collector-contrib/,./,$(ALL_PKGS))
 	@$(MAKE) for-all CMD="make do-unit-tests-with-cover"
 
 .PHONY: integration-tests-with-cover
@@ -66,6 +66,7 @@ for-all:
 add-tag:
 	@[ "${TAG}" ] || ( echo ">> env var TAG is not set"; exit 1 )
 	@echo "Adding tag ${TAG}"
+	@git tag -a ${TAG} -s -m "Version ${TAG}"
 	@set -e; for dir in $(ALL_MODULES); do \
 	  (echo Adding tag "$${dir:2}/$${TAG}" && \
 	 	git tag -a "$${dir:2}/$${TAG}" -s -m "Version ${dir:2}/${TAG}" ); \
@@ -85,8 +86,8 @@ GOMODULES = $(ALL_MODULES) $(PWD)
 .PHONY: $(GOMODULES)
 MODULEDIRS = $(GOMODULES:%=for-all-target-%)
 for-all-target: $(MODULEDIRS)
-$(MODULEDIRS): 
-	$(MAKE) -C $(@:for-all-target-%=%) $(TARGET) 
+$(MODULEDIRS):
+	$(MAKE) -C $(@:for-all-target-%=%) $(TARGET)
 .PHONY: for-all-target
 
 .PHONY: install-tools
@@ -122,7 +123,7 @@ docker-otelcontribcol:
 
 .PHONY: otelcontribcol
 otelcontribcol:
-	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/otelcontribcol_$(GOOS)_$(GOARCH) $(BUILD_INFO) ./cmd/otelcontribcol
+	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/otelcontribcol_$(GOOS)_$(GOARCH)$(EXTENSION) $(BUILD_INFO) ./cmd/otelcontribcol
 
 
 .PHONY: otelcontribcol-all-sys
@@ -142,11 +143,11 @@ otelcontribcol-linux_arm64:
 
 .PHONY: otelcontribcol-windows_amd64
 otelcontribcol-windows_amd64:
-	GOOS=windows GOARCH=amd64 $(MAKE) otelcontribcol
+	GOOS=windows GOARCH=amd64 EXTENSION=.exe $(MAKE) otelcontribcol
 
 .PHONY: update-dep
 update-dep:
-	$(MAKE) for-all CMD="$(PWD)/scripts/update-dep"
+	$(MAKE) for-all CMD="$(PWD)/internal/buildscripts/update-dep"
 	$(MAKE) otelcontribcol
 	$(MAKE) gotidy
 
