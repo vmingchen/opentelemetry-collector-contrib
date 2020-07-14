@@ -35,8 +35,7 @@ type Backend struct {
 	viper *viper.Viper
 
 	mu          sync.Mutex
-	configModel model.Config
-	fingerprint []byte
+	configModel *model.Config
 
 	waitTime int32
 	updateCh chan struct{} // syncs updates; meant for testing
@@ -71,44 +70,32 @@ func NewBackend(configFile string) (*Backend, error) {
 	return backend, nil
 }
 
-// TODO update fingerprint scheme
 func (backend *Backend) updateConfig() error {
 	var configModel model.Config
-	if err := backend.viper.UnmarshalExact(configModel); err != nil {
+	if err := backend.viper.UnmarshalExact(&configModel); err != nil {
 		return fmt.Errorf("local backend failed to decode config: %w", err)
 	}
 
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
-	backend.configModel = configModel
-	// backend.fingerprint = hashConfig(configBlocks)
-
+	backend.configModel = &configModel
 	return nil
 }
 
-// func hashConfig(obj *model.ConfigBlock) []byte {
-// 	return obj.Hash()
-// }
-
-func (backend *Backend) GetFingerprint(_ *res.Resource) ([]byte, error) {
+func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
-	fingerprint := make([]byte, len(backend.fingerprint))
-	copy(fingerprint, backend.fingerprint)
-	return fingerprint, nil
-}
-
-func (backend *Backend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
-	backend.mu.Lock()
-	defer backend.mu.Unlock()
-
-	return &pb.ConfigResponse{
-		// Fingerprint:          backend.fingerprint,
-		// MetricConfig:         backend.metricConfig.Proto(),
+	configBlock := backend.configModel.Match(resource)
+	resp := &pb.ConfigResponse{
+		Fingerprint:          configBlock.Hash(),
+		MetricConfig:         configBlock.MetricConfig.Proto(),
+		TraceConfig:          configBlock.TraceConfig.Proto(),
 		SuggestedWaitTimeSec: backend.waitTime,
-	}, nil
+	}
+
+	return resp, nil
 }
 
 func (backend *Backend) GetWaitTime() int32 {

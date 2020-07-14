@@ -23,7 +23,7 @@ import (
 )
 
 type Config struct {
-	ConfigBlocks []*ConfigBlock // TODO: ok with viper? then convert others, too
+	ConfigBlocks []*ConfigBlock
 }
 
 func (config *Config) Match(resource *res.Resource) *ConfigBlock {

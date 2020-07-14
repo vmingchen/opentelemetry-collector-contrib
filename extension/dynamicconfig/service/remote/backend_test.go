@@ -90,30 +90,6 @@ func TestNewBackend(t *testing.T) {
 	}
 }
 
-func TestUpdateStrategy(t *testing.T) {
-	backend, err := remote.NewBackend("")
-	if err != nil {
-		t.Fatalf("fail to init remote config backend: %v", err)
-	}
-
-	if strategy := backend.GetUpdateStrategy(); strategy != remote.Default {
-		t.Errorf("expected strategy Default, got %v", strategy)
-	}
-
-	backend.SetUpdateStrategy(remote.OnGetFingerprint)
-
-	if strategy := backend.GetUpdateStrategy(); strategy != remote.OnGetFingerprint {
-		t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
-	}
-
-	const NonsenseStrategy remote.UpdateStrategy = 255
-	backend.SetUpdateStrategy(NonsenseStrategy)
-
-	if strategy := backend.GetUpdateStrategy(); strategy != remote.OnGetFingerprint {
-		t.Errorf("expected strategy OnGetFingerprint, got %v", strategy)
-	}
-}
-
 func TestGetFingerprintRemote(t *testing.T) {
 	backend, quit, done := SetUpServer(t)
 	defer TearDownServer(t, backend, quit, done)
@@ -139,8 +115,6 @@ func TestBuildConfigResponseRemote(t *testing.T) {
 
 	newFingerprint := []byte("actually, I believe Gretchen was a cow")
 	mock.AlterFingerprint(newFingerprint)
-
-	backend.SetUpdateStrategy(remote.OnGetFingerprint)
 
 	resp = buildResp(t, backend)
 	if bytes.Equal(resp.Fingerprint, mock.GlobalResponse.Fingerprint) {

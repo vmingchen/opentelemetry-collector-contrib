@@ -23,7 +23,7 @@ import (
 )
 
 type MetricConfig struct {
-	Schedules []Schedule
+	Schedules []*Schedule
 }
 
 func (config *MetricConfig) Proto() *pb.ConfigResponse_MetricConfig {

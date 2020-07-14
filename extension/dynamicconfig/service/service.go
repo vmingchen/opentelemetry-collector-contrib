@@ -30,7 +30,6 @@ import (
 // ConfigBackend defines a general backend that the service can read
 // configuration data from.
 type ConfigBackend interface {
-	GetFingerprint(*res.Resource) ([]byte, error)
 	BuildConfigResponse(*res.Resource) (*pb.ConfigResponse, error)
 	Close() error
 }
@@ -59,7 +58,6 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 type ServiceBuilder struct {
 	remoteConfigAddress string
 	filepath            string
-	updateStrategy      remote.UpdateStrategy
 	waitTime            int32
 
 	// overrides build() to use this given backend.
@@ -76,10 +74,6 @@ func (builder *ServiceBuilder) build() (ConfigBackend, error) {
 		backend, err := remote.NewBackend(builder.remoteConfigAddress)
 		if err != nil {
 			return nil, err
-		}
-
-		if builder.updateStrategy != 0 {
-			backend.SetUpdateStrategy(builder.updateStrategy)
 		}
 
 		return backend, nil
@@ -110,12 +104,6 @@ func WithRemoteConfig(remoteConfigAddress string) Option {
 	}
 }
 
-func WithUpdateStrategy(strategy remote.UpdateStrategy) Option {
-	return func(builder *ServiceBuilder) {
-		builder.updateStrategy = strategy
-	}
-}
-
 func WithLocalConfig(filepath string) Option {
 	return func(builder *ServiceBuilder) {
 		builder.filepath = filepath
@@ -137,19 +125,13 @@ func WithMockBackend() Option {
 
 // TODO: Match req.Resource to appropriate configs
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
-	var resp *pb.ConfigResponse
-	backendFingerprint, err := service.backend.GetFingerprint(req.Resource)
+	resp, err := service.backend.BuildConfigResponse(req.Resource)
 	if err != nil {
-		return nil, fmt.Errorf("fail to read fingerprint from backend: %w", err)
+		return nil, fmt.Errorf("backend failed to build config response: %w", err)
 	}
 
-	if bytes.Equal(backendFingerprint, req.LastKnownFingerprint) {
-		resp = &pb.ConfigResponse{Fingerprint: backendFingerprint}
-	} else {
-		resp, err = service.backend.BuildConfigResponse(req.Resource)
-		if err != nil {
-			return nil, fmt.Errorf("backend fail to build config response: %w", err)
-		}
+	if bytes.Equal(resp.Fingerprint, req.LastKnownFingerprint) {
+		resp = &pb.ConfigResponse{Fingerprint: resp.Fingerprint}
 	}
 
 	return resp, nil

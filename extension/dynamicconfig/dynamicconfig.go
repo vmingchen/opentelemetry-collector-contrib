@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
@@ -56,7 +55,6 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 	if de.config.RemoteConfigAddress != "" {
 		configService, err = service.NewConfigService(
 			service.WithRemoteConfig(de.config.RemoteConfigAddress),
-			service.WithUpdateStrategy(remote.OnGetFingerprint),
 		)
 	} else {
 		configService, err = service.NewConfigService(

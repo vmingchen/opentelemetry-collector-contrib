@@ -26,21 +26,10 @@ import (
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
-type UpdateStrategy uint8
-
-const (
-	// updates cached response on GetFingerprint() and BuildConfigResponse()
-	Default UpdateStrategy = iota
-
-	// updates cached response only on GetFingerprint()
-	OnGetFingerprint
-)
-
 type Backend struct {
 	remoteConfigAddress string
 	conn                *grpc.ClientConn
 	client              pb.DynamicConfigClient
-	updateStrategy      UpdateStrategy
 
 	mu   sync.Mutex
 	resp *pb.ConfigResponse
@@ -51,7 +40,6 @@ func NewBackend(remoteConfigAddress string) (*Backend, error) {
 		remoteConfigAddress: remoteConfigAddress,
 		conn:                nil,
 		client:              nil,
-		updateStrategy:      Default,
 	}
 
 	if err := backend.initConn(); err != nil {
@@ -75,39 +63,15 @@ func (backend *Backend) initConn() error {
 	return nil
 }
 
-func (backend *Backend) GetUpdateStrategy() UpdateStrategy {
-	return backend.updateStrategy
-}
-
-func (backend *Backend) SetUpdateStrategy(strategy UpdateStrategy) {
-	if strategy == Default || strategy == OnGetFingerprint {
-		backend.updateStrategy = strategy
-	}
-}
-
-func (backend *Backend) GetFingerprint(resource *res.Resource) ([]byte, error) {
-	if err := backend.syncRemote(resource); err != nil {
-		return nil, fmt.Errorf("fail to get fingerprint: %w", err)
-	}
-
-	backend.mu.Lock()
-	resp := backend.resp
-	backend.mu.Unlock()
-
-	return resp.Fingerprint, nil
-}
-
 func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
-	if backend.updateStrategy == Default {
-		if err := backend.syncRemote(resource); err != nil {
-			return nil, fmt.Errorf("fail to build config resp: %w", err)
-		}
+	if err := backend.syncRemote(resource); err != nil {
+		return nil, fmt.Errorf("fail to build config resp: %w", err)
 	}
 
 	backend.mu.Lock()
-	resp := backend.resp
-	backend.mu.Unlock()
+	defer backend.mu.Unlock()
 
+	resp := backend.resp
 	return resp, nil
 }
 
