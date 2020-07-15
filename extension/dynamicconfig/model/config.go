@@ -26,15 +26,21 @@ type Config struct {
 	ConfigBlocks []*ConfigBlock
 }
 
+// Given a resource, Match will compile a config block that contains the
+// relevant configs. If all resource labels in a config block match a key-value
+// pair in the given resource, then the configs from this block will be included
+// in the returned config block.  If a config block specifies no resources, then
+// it will be included in all matches. In this way, a user may specify default
+// configs to be included for all resources.
 func (config *Config) Match(resource *res.Resource) *ConfigBlock {
-	resourceSet, resourceList := embed(resource)
+	labelSet, labelList := embed(resource)
 	totalBlock := &ConfigBlock{
 		MetricConfig: &MetricConfig{},
-		Resource:     resourceList,
+		Resource:     labelList,
 	}
 
 	for _, block := range config.ConfigBlocks {
-		if doInclude(block, resourceSet) {
+		if doInclude(block, labelSet) {
 			totalBlock.Add(block)
 		}
 	}
@@ -47,16 +53,16 @@ func embed(resource *res.Resource) (map[string]bool, []string) {
 		resource = &res.Resource{}
 	}
 
-	resourceSet := make(map[string]bool)
-	resourceList := make([]string, len(resource.Attributes))
+	labelSet := make(map[string]bool)
+	labelList := make([]string, len(resource.Attributes))
 
 	for i, attr := range resource.Attributes {
 		attrString := attrToString(attr)
-		resourceSet[attrString] = true
-		resourceList[i] = attrString
+		labelSet[attrString] = true
+		labelList[i] = attrString
 	}
 
-	return resourceSet, resourceList
+	return labelSet, labelList
 }
 
 func attrToString(attr *com.KeyValue) string {
@@ -67,11 +73,11 @@ func attrToString(attr *com.KeyValue) string {
 	return attrString
 }
 
-func doInclude(block *ConfigBlock, resourceSet map[string]bool) bool {
+func doInclude(block *ConfigBlock, labelSet map[string]bool) bool {
 	include := true
 	for _, label := range block.Resource {
 		label = clean(label)
-		include = include && resourceSet[label]
+		include = include && labelSet[label]
 	}
 
 	return include
