@@ -21,7 +21,7 @@ import (
 
 func TestMetricConfigProto(t *testing.T) {
 	config := MetricConfig{
-		Schedules: []Schedule{Schedule{}, Schedule{}},
+		Schedules: []*Schedule{{}, {}},
 	}
 
 	configProto := config.Proto()
@@ -33,22 +33,22 @@ func TestMetricConfigProto(t *testing.T) {
 
 func TestMetricConfigHash(t *testing.T) {
 	configA := MetricConfig{
-		Schedules: []Schedule{
-			Schedule{Period: "MIN_1"},
-			Schedule{Period: "MIN_5"},
+		Schedules: []*Schedule{
+			{Period: "MIN_1"},
+			{Period: "MIN_5"},
 		},
 	}
 
 	configB := MetricConfig{
-		Schedules: []Schedule{
-			Schedule{Period: "MIN_5"},
-			Schedule{Period: "MIN_1"},
+		Schedules: []*Schedule{
+			{Period: "MIN_5"},
+			{Period: "MIN_1"},
 		},
 	}
 
 	configC := MetricConfig{
-		Schedules: []Schedule{
-			Schedule{Period: "MIN_1"},
+		Schedules: []*Schedule{
+			{Period: "MIN_1"},
 		},
 	}
 
@@ -58,5 +58,13 @@ func TestMetricConfigHash(t *testing.T) {
 
 	if bytes.Equal(configA.Hash(), configC.Hash()) {
 		t.Errorf("different configs with identical hashes")
+	}
+}
+
+func TestMetricConfigHashEmpty(t *testing.T) {
+	config := &MetricConfig{}
+	hash := config.Hash()
+	if !bytes.Equal(hash, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
+		t.Errorf("expected all zeros, got: %v", hash)
 	}
 }

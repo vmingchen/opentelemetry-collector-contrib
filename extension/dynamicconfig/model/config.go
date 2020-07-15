@@ -29,8 +29,8 @@ type Config struct {
 func (config *Config) Match(resource *res.Resource) *ConfigBlock {
 	resourceSet, resourceList := embed(resource)
 	totalBlock := &ConfigBlock{
-		Resource:     resourceList,
 		MetricConfig: &MetricConfig{},
+		Resource:     resourceList,
 	}
 
 	for _, block := range config.ConfigBlocks {
@@ -43,6 +43,10 @@ func (config *Config) Match(resource *res.Resource) *ConfigBlock {
 }
 
 func embed(resource *res.Resource) (map[string]bool, []string) {
+	if resource == nil {
+		resource = &res.Resource{}
+	}
+
 	resourceSet := make(map[string]bool)
 	resourceList := make([]string, len(resource.Attributes))
 

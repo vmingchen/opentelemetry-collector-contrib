@@ -40,6 +40,10 @@ func (config *MetricConfig) Proto() *pb.ConfigResponse_MetricConfig {
 }
 
 func (config *MetricConfig) Hash() []byte {
+	if len(config.Schedules) == 0 {
+		return []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	}
+
 	hashes := make([][]byte, len(config.Schedules))
 	for i, sched := range config.Schedules {
 		hashes[i] = sched.Hash()

@@ -30,7 +30,7 @@ var config = Config{
 				"location:infirmary",
 			},
 			MetricConfig: &MetricConfig{
-				Schedules: []Schedule{
+				Schedules: []*Schedule{
 					{Period: "SEC_1"},
 				},
 			},
@@ -40,15 +40,15 @@ var config = Config{
 				"status: 1",
 			},
 			MetricConfig: &MetricConfig{
-				Schedules: []Schedule{
+				Schedules: []*Schedule{
 					{Period: "SEC_5"},
 				},
 			},
 		},
 		{
-			Resource: []string{},
+			Resource: nil,
 			MetricConfig: &MetricConfig{
-				Schedules: []Schedule{
+				Schedules: []*Schedule{
 					{Period: "DAY_1"},
 				},
 			},
@@ -58,7 +58,7 @@ var config = Config{
 				"status:0",
 			},
 			MetricConfig: &MetricConfig{
-				Schedules: []Schedule{
+				Schedules: []*Schedule{
 					{Period: "DAY_7"},
 				},
 			},
@@ -96,9 +96,7 @@ func TestMatch(t *testing.T) {
 }
 
 func TestMatchEmptyResource(t *testing.T) {
-	resource := &res.Resource{
-		Attributes: []*com.KeyValue{},
-	}
+	resource := &res.Resource{}
 
 	result := config.Match(resource)
 	scheds := result.MetricConfig.Schedules
@@ -117,20 +115,46 @@ func TestMatchEmptyResource(t *testing.T) {
 	}
 }
 
-func TestMatchNone(t *testing.T) {
+func TestMatchNilResource(t *testing.T) {
+	var resource *res.Resource = nil
+
+	result := config.Match(resource)
+	scheds := result.MetricConfig.Schedules
+
+	schedlen := len(scheds)
+	if schedlen != 1 {
+		t.Errorf("expected to have one schedule, got: %v", schedlen)
+	}
+
+	if scheds[0].Period != "DAY_1" {
+		t.Errorf("expected period to be DAY_1, got: %v", scheds)
+	}
+
+	if len(result.Resource) > 0 {
+		t.Errorf("expected resource list to be empty, got: %v", result)
+	}
+}
+
+func TestMatchNoResource(t *testing.T) {
 	resource := &res.Resource{
 		Attributes: []*com.KeyValue{
 			{Key: "secret", Value: &com.AnyValue{Value: &com.AnyValue_IntValue{IntValue: 69105}}},
 		},
 	}
 
-	truncConfig := Config{config.ConfigBlocks[:2]}
+	result := config.Match(resource)
+	scheds := result.MetricConfig.Schedules
 
-	result := truncConfig.Match(resource)
-	schedLen := len(result.MetricConfig.Schedules)
-
-	if schedLen > 0 {
-		t.Errorf("expected no matches, got: %v", schedLen)
+	schedlen := len(scheds)
+	if schedlen != 1 {
+		t.Errorf("expected to have one schedule, got: %v", schedlen)
 	}
 
+	if scheds[0].Period != "DAY_1" {
+		t.Errorf("expected period to be DAY_1, got: %v", scheds)
+	}
+
+	if result.Resource[0] != "secret:69105" {
+		t.Errorf("result resource list incorrect: %v", result)
+	}
 }

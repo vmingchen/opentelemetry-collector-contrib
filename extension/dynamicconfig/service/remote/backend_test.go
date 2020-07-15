@@ -90,20 +90,6 @@ func TestNewBackend(t *testing.T) {
 	}
 }
 
-func TestGetFingerprintRemote(t *testing.T) {
-	backend, quit, done := SetUpServer(t)
-	defer TearDownServer(t, backend, quit, done)
-
-	fingerprint, err := backend.GetFingerprint(nil)
-	if err != nil {
-		t.Errorf("fail to get fingerprint: %v", err)
-	}
-
-	if !bytes.Equal(fingerprint, mock.GlobalFingerprint) {
-		t.Errorf("expected fingerprint %v, got %v", mock.GlobalFingerprint, fingerprint)
-	}
-}
-
 func TestBuildConfigResponseRemote(t *testing.T) {
 	backend, quit, done := SetUpServer(t)
 	defer TearDownServer(t, backend, quit, done)
@@ -115,13 +101,6 @@ func TestBuildConfigResponseRemote(t *testing.T) {
 
 	newFingerprint := []byte("actually, I believe Gretchen was a cow")
 	mock.AlterFingerprint(newFingerprint)
-
-	resp = buildResp(t, backend)
-	if bytes.Equal(resp.Fingerprint, mock.GlobalResponse.Fingerprint) {
-		t.Errorf("expected resp and mock fingerprints to be different, both: %v", resp)
-	}
-
-	backend.GetFingerprint(nil)
 
 	resp = buildResp(t, backend)
 	if !bytes.Equal(resp.Fingerprint, mock.GlobalResponse.Fingerprint) {
