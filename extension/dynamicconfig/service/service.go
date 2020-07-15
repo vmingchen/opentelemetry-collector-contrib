@@ -123,7 +123,6 @@ func WithMockBackend() Option {
 	}
 }
 
-// TODO: Match req.Resource to appropriate configs
 func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	resp, err := service.backend.BuildConfigResponse(req.Resource)
 	if err != nil {

@@ -921,6 +921,10 @@ github.com/vmingchen/opentelemetry-go-contrib v0.0.0-20200708120024-373681bedf7c
 github.com/vmingchen/opentelemetry-go-contrib v0.0.0-20200708120024-373681bedf7c/go.mod h1:g4BXWOrb66AyXbXlSgfGWR7TQzXQX4Oq2NidBrSwZPM=
 github.com/vmingchen/opentelemetry-go-contrib/exporters/metric/dynamicconfig v0.0.0-20200708120024-373681bedf7c h1:XaCrarIW+ZEm/vxiHkHdBLOe8jMLk8Fjx+jlQLs9TAo=
 github.com/vmingchen/opentelemetry-go-contrib/exporters/metric/dynamicconfig v0.0.0-20200708120024-373681bedf7c/go.mod h1:qZxteriQyvQLoV9GjrMhWlE0PLh3glIyp9skY2mivUI=
+github.com/vmingchen/opentelemetry-go-contrib/sdk/dynamicconfig v0.0.0-20200715143638-a63633cff63e h1:Yl4gw3rUs7wjNq9682msBSoqNkCrpzhIF+lzlZRxkWQ=
+github.com/vmingchen/opentelemetry-go-contrib/sdk/dynamicconfig v0.0.0-20200715143638-a63633cff63e/go.mod h1:bEFxs5uIfxjvr9hQAu3+9WLJYLSpcsXVk9/iLBKXeUk=
+github.com/vmingchen/opentelemetry-go-contrib/sdk/dynamicconfig v0.0.0-20200715211136-6195eecdc418 h1:Vs15lkgrRhNF5s4LOWYlIZQHavCpuQP987tpvMacqD0=
+github.com/vmingchen/opentelemetry-go-contrib/sdk/dynamicconfig v0.0.0-20200715211136-6195eecdc418/go.mod h1:bEFxs5uIfxjvr9hQAu3+9WLJYLSpcsXVk9/iLBKXeUk=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098 h1:fC5uKIj6DXuCc1xxCLVzt5DRF68gGRMk/1IGiacy0jI=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=

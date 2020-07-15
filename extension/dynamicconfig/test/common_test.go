@@ -29,6 +29,22 @@ import (
 	"time"
 )
 
+var (
+	sec1Schedule = `ConfigBlocks:
+    MetricConfig:
+        Schedules:
+        - InclusionPatterns:
+            - StartsWith: "*"
+          Period: SEC_1`
+
+	sec5Schedule = `ConfigBlocks:
+    MetricConfig:
+        Schedules:
+        - InclusionPatterns:
+            - StartsWith: "*"
+          Period: SEC_5`
+)
+
 func startCollector(t *testing.T, configPath string, metricsAddr string) (*exec.Cmd, io.ReadCloser) {
 	cmdPath := fmt.Sprintf("../../../bin/otelcontribcol_%s_%s",
 		runtime.GOOS,
@@ -87,7 +103,7 @@ func startSampleApp(t *testing.T) *exec.Cmd {
 func timeLogs(t *testing.T, stderr io.ReadCloser, numSamples, discard int) time.Duration {
 	scanner := bufio.NewScanner(stderr)
 
-	primeLogTimer(scanner, discard)
+	primeLogTimer(t, scanner, discard)
 
 	var total time.Duration
 	var prevTime time.Time
@@ -117,15 +133,18 @@ func timeLogs(t *testing.T, stderr io.ReadCloser, numSamples, discard int) time.
 
 }
 
-func primeLogTimer(scanner *bufio.Scanner, discard int) {
+func primeLogTimer(t *testing.T, scanner *bufio.Scanner, discard int) {
 	for {
 		scanner.Scan()
-		if strings.Contains(scanner.Text(), "MetricsExporter") {
+		nextLine := scanner.Text()
+		if strings.Contains(nextLine, "MetricsExporter") {
 			if discard > 0 {
 				discard--
 			} else {
 				return
 			}
+		} else if strings.Contains(nextLine, "error") {
+			t.Fatalf("Fail to scan: %v", nextLine)
 		}
 	}
 }

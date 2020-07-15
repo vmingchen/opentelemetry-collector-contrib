@@ -23,10 +23,6 @@ import (
 
 func testRemoteBackend(t *testing.T) {
 	t.Log("starting remote backend test")
-	sec1Schedule := `Schedules:
-    - Period: SEC_1`
-	sec5Schedule := `Schedules:
-    - Period: SEC_5`
 
 	schedFile := getSchedulesFile(t)
 	writeString(t, schedFile, sec1Schedule)
@@ -64,7 +60,7 @@ func testRemoteBackend(t *testing.T) {
 	t.Log("capturing logs for period=SEC_5")
 	avgDuration = timeLogs(t, stderr, 10, 10)
 	t.Log("avg duration:", avgDuration)
-	if !fuzzyEqualDuration(avgDuration, 5*time.Second, 999*time.Millisecond) {
+	if !fuzzyEqualDuration(avgDuration, 5*time.Second, 1999*time.Millisecond) {
 		t.Errorf("expected period=SEC_5, got: %v", avgDuration)
 	}
 }
