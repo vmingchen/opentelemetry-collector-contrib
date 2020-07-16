@@ -29,9 +29,9 @@ type Config struct {
 // Given a resource, Match will compile a config block that contains the
 // relevant configs. If all resource labels in a config block match a key-value
 // pair in the given resource, then the configs from this block will be included
-// in the returned config block.  If a config block specifies no resources, then
-// it will be included in all matches. In this way, a user may specify default
-// configs to be included for all resources.
+// in the returned config block.  If a config block specifies no resource
+// labels, then it will be included in all matches. In this way, a user may
+// specify default configs to be included for all resources.
 func (config *Config) Match(resource *res.Resource) *ConfigBlock {
 	labelSet, labelList := embed(resource)
 	totalBlock := &ConfigBlock{
