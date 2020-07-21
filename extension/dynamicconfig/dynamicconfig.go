@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 type dynamicConfigExtension struct {
@@ -68,7 +68,7 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 	}
 
 	de.configService = configService
-	pb.RegisterDynamicConfigServer(de.server, configService)
+	pb.RegisterMetricConfigServer(de.server, configService)
 
 	go func() {
 		if err := de.server.Serve(listen); err != nil {

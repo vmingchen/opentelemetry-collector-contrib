@@ -3,6 +3,7 @@ ConfigBlocks:
       Schedules:
           - InclusionPatterns:
                 - StartsWith: "*"
+                  Equals: "/cannot/have/both"
             ExclusionPatterns:
                 - Equals: "/do/not/collect"
             PeriodSec: "MIN_5"

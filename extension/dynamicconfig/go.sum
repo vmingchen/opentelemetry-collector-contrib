@@ -1171,6 +1171,8 @@ github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv
 github.com/vektra/mockery v0.0.0-20181123154057-e78b021dcbb5/go.mod h1:ppEjwdhyy7Y31EnHRDm1JkChoC7LXIJ7Ex0VYLWtZtQ=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098 h1:fC5uKIj6DXuCc1xxCLVzt5DRF68gGRMk/1IGiacy0jI=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
+github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200716191220-7eb25882f08b h1:uvvdDsCGxD6tSJ58rgQ9nhivTQhKxI8y5354Y+4ZXrM=
+github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200716191220-7eb25882f08b/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
 github.com/wadey/gocovmerge v0.0.0-20160331181800-b5bfa59ec0ad/go.mod h1:Hy8o65+MXnS6EwGElrSRjUzQDLXreJlzYLlWiHtt8hM=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=

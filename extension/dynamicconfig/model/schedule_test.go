@@ -20,20 +20,16 @@ import (
 )
 
 func TestScheduleProto(t *testing.T) {
-	metadata := []byte{0x12, 0x23, 0xAF}
-
 	schedule := Schedule{
 		InclusionPatterns: []Pattern{Pattern{}, Pattern{}},
 		ExclusionPatterns: []Pattern{Pattern{}, Pattern{}},
-		Period:            "MIN_5",
-		Metadata:          metadata,
+		PeriodSec:         "MIN_5",
 	}
 
-	p := schedule.Proto()
-	if len(p.InclusionPatterns) != 2 ||
+	p, err := schedule.Proto()
+	if err != nil || len(p.InclusionPatterns) != 2 ||
 		len(p.ExclusionPatterns) != 2 ||
-		p.Period != 300 ||
-		!bytes.Equal(p.Metadata, metadata) {
+		p.PeriodSec != 300 {
 		t.Errorf("improper conversion to proto")
 	}
 }

@@ -21,7 +21,7 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/file"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 func TestNewConfigService(t *testing.T) {
@@ -63,11 +63,11 @@ func TestWaitTimeConfigOption(t *testing.T) {
 
 }
 
-func TestGetConfig(t *testing.T) {
+func TestGetMetricConfig(t *testing.T) {
 	service, err := NewConfigService(WithMockBackend())
-	sameFingerprintReq := pb.ConfigRequest{LastKnownFingerprint: mock.GlobalFingerprint}
+	sameFingerprintReq := pb.MetricConfigRequest{LastKnownFingerprint: mock.GlobalFingerprint}
 
-	resp, err := service.GetConfig(context.Background(), &sameFingerprintReq)
+	resp, err := service.GetMetricConfig(context.Background(), &sameFingerprintReq)
 	if err != nil {
 		t.Errorf("failed to get config: %v", err)
 	}
@@ -76,8 +76,8 @@ func TestGetConfig(t *testing.T) {
 		t.Errorf("expected fingerprint to equal %v: got %v", mock.GlobalFingerprint, resp.Fingerprint)
 	}
 
-	blankReq := pb.ConfigRequest{}
-	resp, err = service.GetConfig(context.Background(), &blankReq)
+	blankReq := pb.MetricConfigRequest{}
+	resp, err = service.GetMetricConfig(context.Background(), &blankReq)
 	if err != nil {
 		t.Errorf("failed to get config: %v", err)
 	}

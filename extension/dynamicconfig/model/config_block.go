@@ -14,27 +14,44 @@
 
 package model
 
+import (
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
+)
+
 type ConfigBlock struct {
-	Resource     []string
-	MetricConfig *MetricConfig
-	TraceConfig  *TraceConfig
+	Resource  []string
+	Schedules []*Schedule
 }
 
-func (block *ConfigBlock) Add(other *ConfigBlock) {
-	if block.MetricConfig == nil {
-		block.MetricConfig = &MetricConfig{}
+func (block *ConfigBlock) Proto() ([]*pb.MetricConfigResponse_Schedule, error) {
+	scheduleSlice := make([]*pb.MetricConfigResponse_Schedule, len(block.Schedules))
+
+	var err error
+	for i, schedule := range block.Schedules {
+		scheduleSlice[i], err = schedule.Proto()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	block.MetricConfig.Schedules = append(
-		block.MetricConfig.Schedules,
-		other.MetricConfig.Schedules...)
+	return scheduleSlice, nil
 }
 
 func (block *ConfigBlock) Hash() []byte {
-	hashes := [][]byte{
-		block.MetricConfig.Hash(),
-		block.TraceConfig.Hash(),
+	if len(block.Schedules) == 0 {
+		return []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	}
+
+	hashes := make([][]byte, len(block.Schedules))
+	for i, sched := range block.Schedules {
+		hashes[i] = sched.Hash()
 	}
 
 	return combineHash(hashes)
+}
+
+func (block *ConfigBlock) Add(other *ConfigBlock) {
+	block.Schedules = append(
+		block.Schedules,
+		other.Schedules...)
 }

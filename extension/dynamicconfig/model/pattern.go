@@ -19,8 +19,10 @@
 package model
 
 import (
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"fmt"
 	"hash/fnv"
+
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 type Pattern struct {
@@ -28,19 +30,23 @@ type Pattern struct {
 	StartsWith string
 }
 
-func (p *Pattern) Proto() *pb.ConfigResponse_MetricConfig_Schedule_Pattern {
+func (p *Pattern) Proto() (*pb.MetricConfigResponse_Schedule_Pattern, error) {
 	if len(p.Equals) > 0 {
-		return &pb.ConfigResponse_MetricConfig_Schedule_Pattern{
-			Match: &pb.ConfigResponse_MetricConfig_Schedule_Pattern_Equals{
+		if len(p.StartsWith) > 0 {
+			return nil, fmt.Errorf("only specify StartsWith or Equals, not both")
+		}
+
+		return &pb.MetricConfigResponse_Schedule_Pattern{
+			Match: &pb.MetricConfigResponse_Schedule_Pattern_Equals{
 				Equals: p.Equals,
 			},
-		}
+		}, nil
 	} else {
-		return &pb.ConfigResponse_MetricConfig_Schedule_Pattern{
-			Match: &pb.ConfigResponse_MetricConfig_Schedule_Pattern_StartsWith{
+		return &pb.MetricConfigResponse_Schedule_Pattern{
+			Match: &pb.MetricConfigResponse_Schedule_Pattern_StartsWith{
 				StartsWith: p.StartsWith,
 			},
-		}
+		}, nil
 	}
 }
 

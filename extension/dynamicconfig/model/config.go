@@ -35,8 +35,7 @@ type Config struct {
 func (config *Config) Match(resource *res.Resource) *ConfigBlock {
 	labelSet, labelList := embed(resource)
 	totalBlock := &ConfigBlock{
-		MetricConfig: &MetricConfig{},
-		Resource:     labelList,
+		Resource: labelList,
 	}
 
 	for _, block := range config.ConfigBlocks {

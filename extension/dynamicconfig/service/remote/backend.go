@@ -22,17 +22,17 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 type Backend struct {
 	remoteConfigAddress string
 	conn                *grpc.ClientConn
-	client              pb.DynamicConfigClient
+	client              pb.MetricConfigClient
 
 	mu   sync.Mutex
-	resp *pb.ConfigResponse
+	resp *pb.MetricConfigResponse
 }
 
 func NewBackend(remoteConfigAddress string) (*Backend, error) {
@@ -59,11 +59,11 @@ func (backend *Backend) initConn() error {
 	}
 
 	backend.conn = conn
-	backend.client = pb.NewDynamicConfigClient(conn)
+	backend.client = pb.NewMetricConfigClient(conn)
 	return nil
 }
 
-func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
+func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.MetricConfigResponse, error) {
 	if err := backend.syncRemote(resource); err != nil {
 		return nil, fmt.Errorf("fail to build config resp: %w", err)
 	}
@@ -84,12 +84,12 @@ func (backend *Backend) syncRemote(resource *res.Resource) error {
 		lastKnownFingerprint = backend.resp.Fingerprint
 	}
 
-	req := &pb.ConfigRequest{
+	req := &pb.MetricConfigRequest{
 		Resource:             resource,
 		LastKnownFingerprint: lastKnownFingerprint,
 	}
 
-	resp, err := backend.client.GetConfig(context.Background(), req)
+	resp, err := backend.client.GetMetricConfig(context.Background(), req)
 	if err != nil {
 		return err
 	}

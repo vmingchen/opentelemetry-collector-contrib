@@ -22,7 +22,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 	"google.golang.org/grpc"
 )
 
@@ -32,13 +32,13 @@ func StartServer(t *testing.T, quit <-chan struct{}, done chan<- struct{}) strin
 	listen, err := net.Listen("tcp", ":0")
 	address := listen.Addr()
 
-	if listen == nil || err != nil {
+	if err != nil || listen == nil {
 		t.Fatalf("fail to listen: %v", err)
 	}
 
 	server := grpc.NewServer()
 	configService, _ := service.NewConfigService(service.WithMockBackend())
-	pb.RegisterDynamicConfigServer(server, configService)
+	pb.RegisterMetricConfigServer(server, configService)
 
 	go func() {
 		done <- struct{}{}
@@ -108,7 +108,7 @@ func TestBuildConfigResponseRemote(t *testing.T) {
 	}
 }
 
-func buildResp(t *testing.T, backend *remote.Backend) *pb.ConfigResponse {
+func buildResp(t *testing.T, backend *remote.Backend) *pb.MetricConfigResponse {
 	resp, err := backend.BuildConfigResponse(nil)
 	if err != nil {
 		t.Errorf("fail to build config response: %v", err)

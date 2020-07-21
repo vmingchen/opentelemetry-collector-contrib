@@ -19,20 +19,65 @@
 package model
 
 import (
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"encoding/binary"
+	"fmt"
 	"hash/fnv"
+	"strconv"
 )
 
 type CollectionPeriod string
 
-func (period CollectionPeriod) Proto() pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod {
-	interval := pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod_value[string(period)]
-	return pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod(interval)
+func (period CollectionPeriod) Proto() (int32, error) {
+	switch period {
+	case "SEC_1":
+		return 1, nil
+	case "SEC_5":
+		return 5, nil
+	case "SEC_10":
+		return 10, nil
+	case "SEC_30":
+		return 30, nil
+	case "MIN_1":
+		return 60, nil
+	case "MIN_5":
+		return 300, nil
+	case "MIN_10":
+		return 600, nil
+	case "MIN_30":
+		return 1800, nil
+	case "HR_1":
+		return 3600, nil
+	case "HR_2":
+		return 7200, nil
+	case "HR_4":
+		return 14400, nil
+	case "HR_12":
+		return 43200, nil
+	case "DAY_1":
+		return 86400, nil
+	case "DAY_7":
+		return 604800, nil
+	default:
+		value, err := strconv.ParseInt(string(period), 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("fail to parse period: %v", err)
+		}
+
+		if value < 0 {
+			return 0, fmt.Errorf("cannot process negative period: %v", value)
+		}
+
+		return int32(value), nil
+	}
 }
 
 func (period CollectionPeriod) Hash() []byte {
 	hasher := fnv.New64a()
-	hasher.Write([]byte(period.Proto().String()))
-	return hasher.Sum(nil)
+	periodSec, _ := period.Proto()
 
+	bs := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bs, uint32(periodSec))
+
+	hasher.Write(bs)
+	return hasher.Sum(nil)
 }

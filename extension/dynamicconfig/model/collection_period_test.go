@@ -21,19 +21,28 @@ import (
 
 func TestCollectionPeriodProto(t *testing.T) {
 	var period CollectionPeriod = "MIN_5"
-	p := period.Proto()
+	p, err := period.Proto()
 
-	if int(p) != 300 {
+	if err != nil || p != 300 {
+		t.Errorf("improper conversion to proto")
+	}
+}
+
+func TestCollectionPeriodIntLiteralProto(t *testing.T) {
+	var period CollectionPeriod = "2"
+	p, err := period.Proto()
+
+	if err != nil || p != 2 {
 		t.Errorf("improper conversion to proto")
 	}
 }
 
 func TestCollectionPeriodNotFoundProto(t *testing.T) {
 	var period CollectionPeriod = "DAY_69105"
-	p := period.Proto()
+	_, err := period.Proto()
 
-	if int(p) != 0 {
-		t.Errorf("improper conversion to proto")
+	if err == nil {
+		t.Errorf("conversion should have failed with period: %v", period)
 	}
 }
 

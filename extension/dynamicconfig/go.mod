@@ -13,6 +13,6 @@ require (
 	google.golang.org/grpc v1.29.1
 )
 
-replace github.com/open-telemetry/opentelemetry-proto => github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098
+replace github.com/open-telemetry/opentelemetry-proto => github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200716191220-7eb25882f08b
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig => ./

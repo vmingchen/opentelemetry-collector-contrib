@@ -3,7 +3,7 @@ extensions:
   dynamicconfig/1:
     endpoint: 0.0.0.0:12345
     remote_config_address: 0.0.0.0:54321
-    local_config_file: wut-the-wut.yaml
+    local_config_file: schedules.yaml
     wait_time: 20
 
 service:

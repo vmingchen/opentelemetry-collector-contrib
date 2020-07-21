@@ -16,11 +16,11 @@ package mock
 
 import (
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 var GlobalFingerprint = []byte("There once was a cat named Gretchen")
-var GlobalResponse = &pb.ConfigResponse{
+var GlobalResponse = &pb.MetricConfigResponse{
 	Fingerprint: GlobalFingerprint,
 }
 
@@ -35,7 +35,7 @@ func (_ *Backend) GetFingerprint(_ *res.Resource) ([]byte, error) {
 	return []byte(GlobalFingerprint), nil
 }
 
-func (_ *Backend) BuildConfigResponse(_ *res.Resource) (*pb.ConfigResponse, error) {
+func (_ *Backend) BuildConfigResponse(_ *res.Resource) (*pb.MetricConfigResponse, error) {
 	return GlobalResponse, nil
 }
 

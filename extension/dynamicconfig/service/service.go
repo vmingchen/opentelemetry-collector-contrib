@@ -23,21 +23,21 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/file"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/mock"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/service/remote"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
 // ConfigBackend defines a general backend that the service can read
 // configuration data from.
 type ConfigBackend interface {
-	BuildConfigResponse(*res.Resource) (*pb.ConfigResponse, error)
+	BuildConfigResponse(*res.Resource) (*pb.MetricConfigResponse, error)
 	Close() error
 }
 
 // ConfigService implements the server side of the gRPC service for config
 // updates.
 type ConfigService struct {
-	pb.UnimplementedDynamicConfigServer // for forward compatability
+	pb.UnimplementedMetricConfigServer // for forward compatability
 	backend                             ConfigBackend
 }
 
@@ -123,14 +123,14 @@ func WithMockBackend() Option {
 	}
 }
 
-func (service *ConfigService) GetConfig(ctx context.Context, req *pb.ConfigRequest) (*pb.ConfigResponse, error) {
+func (service *ConfigService) GetMetricConfig(ctx context.Context, req *pb.MetricConfigRequest) (*pb.MetricConfigResponse, error) {
 	resp, err := service.backend.BuildConfigResponse(req.Resource)
 	if err != nil {
 		return nil, fmt.Errorf("backend failed to build config response: %w", err)
 	}
 
 	if bytes.Equal(resp.Fingerprint, req.LastKnownFingerprint) {
-		resp = &pb.ConfigResponse{Fingerprint: resp.Fingerprint}
+		resp = &pb.MetricConfigResponse{Fingerprint: resp.Fingerprint}
 	}
 
 	return resp, nil

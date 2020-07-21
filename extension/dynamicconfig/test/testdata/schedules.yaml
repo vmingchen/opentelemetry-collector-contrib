@@ -3,4 +3,4 @@ ConfigBlocks:
         Schedules:
         - InclusionPatterns:
             - StartsWith: "*"
-          Period: SEC_5
+          PeriodSec: SEC_5

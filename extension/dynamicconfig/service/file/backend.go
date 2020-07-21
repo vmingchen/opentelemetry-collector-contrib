@@ -24,7 +24,7 @@ import (
 	"go.opentelemetry.io/collector/config"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/dynamicconfig/model"
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
@@ -83,15 +83,19 @@ func (backend *Backend) updateConfig() error {
 	return nil
 }
 
-func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.ConfigResponse, error) {
+func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.MetricConfigResponse, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 
 	configBlock := backend.configModel.Match(resource)
-	resp := &pb.ConfigResponse{
+	schedulesProto, err := configBlock.Proto()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.MetricConfigResponse{
 		Fingerprint:          configBlock.Hash(),
-		MetricConfig:         configBlock.MetricConfig.Proto(),
-		TraceConfig:          configBlock.TraceConfig.Proto(),
+		Schedules:            schedulesProto,
 		SuggestedWaitTimeSec: backend.waitTime,
 	}
 

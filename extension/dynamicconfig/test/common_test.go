@@ -35,14 +35,14 @@ var (
         Schedules:
         - InclusionPatterns:
             - StartsWith: "*"
-          Period: SEC_1`
+          PeriodSec: SEC_1`
 
 	sec5Schedule = `ConfigBlocks:
     MetricConfig:
         Schedules:
         - InclusionPatterns:
             - StartsWith: "*"
-          Period: SEC_5`
+          PeriodSec: SEC_5`
 )
 
 func startCollector(t *testing.T, configPath string, metricsAddr string) (*exec.Cmd, io.ReadCloser) {

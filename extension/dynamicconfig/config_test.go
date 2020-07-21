@@ -48,7 +48,7 @@ func TestLoadConfig(t *testing.T) {
 			},
 			Endpoint:            "0.0.0.0:12345",
 			RemoteConfigAddress: "0.0.0.0:54321",
-			LocalConfigFile:     "wut-the-wut.yaml",
+			LocalConfigFile:     "schedules.yaml",
 			WaitTime:            20,
 		},
 		ext1,

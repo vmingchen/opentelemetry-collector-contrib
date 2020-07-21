@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"testing"
 
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 func TestPatternProto(t *testing.T) {
@@ -26,30 +26,27 @@ func TestPatternProto(t *testing.T) {
 		StartsWith: "/my/metric",
 	}
 
-	p := pattern.Proto()
-
-	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_StartsWith).StartsWith != "/my/metric" {
+	p, err := pattern.Proto()
+	if err != nil || p.Match.(*pb.MetricConfigResponse_Schedule_Pattern_StartsWith).StartsWith != "/my/metric" {
 		t.Errorf("improper conversion to proto")
 	}
 }
 
-func TestPatternDuplicateProto(t *testing.T) {
+func TestPatternBadProto(t *testing.T) {
 	pattern := Pattern{
-		Equals:     "/use/this/rule",
-		StartsWith: "/not/this/one",
+		StartsWith: "/my/metric",
+		Equals:     "/my/metric",
 	}
 
-	p := pattern.Proto()
-
-	if p.Match.(*pb.ConfigResponse_MetricConfig_Schedule_Pattern_Equals).Equals != "/use/this/rule" {
-		t.Errorf("improper conversion to proto")
+	p, err := pattern.Proto()
+	if err == nil {
+		t.Errorf("expected Proto() to fail, built: %v", p)
 	}
 }
 
 func TestPatternHash(t *testing.T) {
 	configA := Pattern{
-		Equals:     "/use/this/rule",
-		StartsWith: "/not/this/one",
+		Equals: "/use/this/rule",
 	}
 
 	configB := Pattern{

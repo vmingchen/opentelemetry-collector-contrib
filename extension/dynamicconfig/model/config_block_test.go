@@ -22,23 +22,17 @@ import (
 func TestAddConfigBlock(t *testing.T) {
 	configBlocks := []*ConfigBlock{
 		{
-			MetricConfig: &MetricConfig{
-				Schedules: []*Schedule{
-					{Period: "SEC_1"},
-				},
+			Schedules: []*Schedule{
+				{PeriodSec: "SEC_1"},
 			},
 		},
 		{
-			MetricConfig: &MetricConfig{
-				Schedules: []*Schedule{
-					{Period: "SEC_5"}, {Period: "DAY_1"},
-				},
+			Schedules: []*Schedule{
+				{PeriodSec: "SEC_5"}, {PeriodSec: "DAY_1"},
 			},
 		},
 		{
-			MetricConfig: &MetricConfig{
-				Schedules: []*Schedule{},
-			},
+			Schedules: []*Schedule{},
 		},
 	}
 
@@ -47,42 +41,46 @@ func TestAddConfigBlock(t *testing.T) {
 		totalBlock.Add(block)
 	}
 
-	scheds := totalBlock.MetricConfig.Schedules
+	scheds := totalBlock.Schedules
 	if len(scheds) != 3 {
 		t.Errorf("expected 3 schedules, found: %v", len(scheds))
 	}
 
-	if scheds[0].Period != "SEC_1" || scheds[1].Period != "SEC_5" || scheds[2].Period != "DAY_1" {
+	if scheds[0].PeriodSec != "SEC_1" || scheds[1].PeriodSec != "SEC_5" || scheds[2].PeriodSec != "DAY_1" {
 		t.Errorf("expected periods SEC_1, SEC_5, DAY_1, found: %v", scheds)
 	}
 }
 
-func TestHash(t *testing.T) {
+func TestConfigBlockProto(t *testing.T) {
+	config := ConfigBlock{
+		Schedules: []*Schedule{{PeriodSec: "MIN_5"}, {PeriodSec: "MIN_1"}},
+	}
+
+	configProto, err := config.Proto()
+	if err != nil || len(configProto) != 2 {
+		t.Errorf("improper conversion to proto")
+	}
+}
+
+func TestConfigBlockHash(t *testing.T) {
 	configA := ConfigBlock{
-		MetricConfig: &MetricConfig{
-			Schedules: []*Schedule{
-				{Period: "SEC_1"},
-			},
+		Schedules: []*Schedule{
+			{PeriodSec: "MIN_1"},
+			{PeriodSec: "MIN_5"},
 		},
-		TraceConfig: &TraceConfig{},
 	}
 
 	configB := ConfigBlock{
-		TraceConfig: &TraceConfig{},
-		MetricConfig: &MetricConfig{
-			Schedules: []*Schedule{
-				{Period: "SEC_1"},
-			},
+		Schedules: []*Schedule{
+			{PeriodSec: "MIN_5"},
+			{PeriodSec: "MIN_1"},
 		},
 	}
 
 	configC := ConfigBlock{
-		MetricConfig: &MetricConfig{
-			Schedules: []*Schedule{
-				{Period: "SEC_5"},
-			},
+		Schedules: []*Schedule{
+			{PeriodSec: "MIN_1"},
 		},
-		TraceConfig: &TraceConfig{},
 	}
 
 	if !bytes.Equal(configA.Hash(), configB.Hash()) {
@@ -91,5 +89,13 @@ func TestHash(t *testing.T) {
 
 	if bytes.Equal(configA.Hash(), configC.Hash()) {
 		t.Errorf("different configs with identical hashes")
+	}
+}
+
+func TestConfigBlockHashEmpty(t *testing.T) {
+	config := &ConfigBlock{}
+	hash := config.Hash()
+	if !bytes.Equal(hash, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
+		t.Errorf("expected all zeros, got: %v", hash)
 	}
 }

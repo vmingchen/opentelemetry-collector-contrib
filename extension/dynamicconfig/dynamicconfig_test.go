@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/testutil"
 )
@@ -53,11 +53,11 @@ func TestDyconfigExtensionUsage(t *testing.T) {
 	)
 	defer conn.Close()
 
-	client := pb.NewDynamicConfigClient(conn)
+	client := pb.NewMetricConfigClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err = client.GetConfig(ctx, &pb.ConfigRequest{})
+	_, err = client.GetMetricConfig(ctx, &pb.MetricConfigRequest{})
 	require.NoError(t, err)
 }
 

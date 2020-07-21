@@ -1,19 +1,12 @@
 ConfigBlocks:
-     - Resource:
-     - MetricConfig:
-          Schedules:
-              - InclusionPatterns:
-                    - EndsWith: "*"
-                ExclusionPatterns:
-                    - Equals: "woot"
-                Period: "MIN_5"
-
-              - InclusionPatterns:
-                    - Equals: "woot/woot/woot"
-                Period: "DAY_7"
-
     - Resource:
-          - "namespace: weather-forecast"
-          - "deployment-id: 5564279"
+      Schedules:
+          - InclusionPattern:
+                - StartsWith: "/missing/s"
+            ExclusionPatterns:
+                - Equals: "/do/not/collect"
+            PeriodSec: "MIN_5"
 
-      TraceConfig:
+          - InclusionPatterns:
+                - Equals: "/collect/every/week"
+            PeriodSec: "DAY_7"

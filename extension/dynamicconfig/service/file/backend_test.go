@@ -27,8 +27,8 @@ func TestNewFileConfig(t *testing.T) {
 		t.Errorf("failed to catch nonexistant config file")
 	}
 
-	if _, err := NewBackend("../../testdata/schedules_bad.yaml"); err == nil {
-		t.Errorf("failed to catch impropoer config file")
+	if config, err := NewBackend("../../testdata/schedules_bad.yaml"); err == nil {
+		t.Errorf("failed to catch improper config file, built config: %v", config)
 	}
 
 	if _, err := NewBackend("../../testdata/schedules.yaml"); err != nil {
@@ -38,13 +38,11 @@ func TestNewFileConfig(t *testing.T) {
 
 func TestUpdateConfig(t *testing.T) {
 	originalSchedule := `ConfigBlocks:
-    MetricConfig:
-        Schedules:
-            - Period: MIN_5`
+    Schedules:
+        - PeriodSec: MIN_5`
 	updatedSchedule := `ConfigBlocks:
-    MetricConfig:
-        Schedules:
-            - Period: MIN_1`
+    Schedules:
+        - PeriodSec: MIN_1`
 
 	tmpfile := newTmpSchedule(t)
 	defer os.Remove(tmpfile.Name())
@@ -57,9 +55,9 @@ func TestUpdateConfig(t *testing.T) {
 	}
 	backend.updateCh = make(chan struct{})
 
-	if backend.configModel.ConfigBlocks[0].MetricConfig.Schedules[0].Period != "MIN_5" {
-		t.Errorf("update incorrect: wanted Period=MIN_5, got MetricConfig: %v",
-			backend.configModel.ConfigBlocks[0].MetricConfig)
+	if backend.configModel.ConfigBlocks[0].Schedules[0].PeriodSec != "MIN_5" {
+		t.Errorf("update incorrect: wanted Period=MIN_5, got Schedules: %v",
+			backend.configModel.ConfigBlocks[0])
 	}
 
 	writeString(t, tmpfile, updatedSchedule)
@@ -67,9 +65,9 @@ func TestUpdateConfig(t *testing.T) {
 
 	select {
 	case <-backend.updateCh:
-		if backend.configModel.ConfigBlocks[0].MetricConfig.Schedules[0].Period != "MIN_1" {
-			t.Errorf("update incorrect: wanted Period=MIN_1, got MetricConfig: %v",
-				backend.configModel.ConfigBlocks[0].MetricConfig)
+		if backend.configModel.ConfigBlocks[0].Schedules[0].PeriodSec != "MIN_1" {
+			t.Errorf("update incorrect: wanted Period=MIN_1, got Schedules: %v",
+				backend.configModel.ConfigBlocks[0])
 		}
 	case <-timeout:
 		t.Errorf("local config update timed out")
@@ -116,7 +114,7 @@ func TestFingerprint(t *testing.T) {
 		t.Fatalf("failed to read config file")
 	}
 
-	fingerprint := backend.configModel.ConfigBlocks[0].MetricConfig.Hash()
+	fingerprint := backend.configModel.ConfigBlocks[0].Hash()
 	resp, err := backend.BuildConfigResponse(nil)
 	if err != nil {
 		t.Errorf("fail to build config response: %v", err)
@@ -139,8 +137,20 @@ func TestBuildConfigResponse(t *testing.T) {
 		t.Errorf("fail to build config response: %v", err)
 	}
 
-	if resp.Fingerprint == nil || resp.MetricConfig == nil || resp.SuggestedWaitTimeSec == 0 {
+	if resp.Fingerprint == nil || resp.Schedules == nil || resp.SuggestedWaitTimeSec == 0 {
 		t.Errorf("config response incomplete: %v", resp)
+	}
+}
+
+func TestBuildConfigResponseWithDuplicateInPattern(t *testing.T) {
+	backend, err := NewBackend("../../testdata/schedules_improper_pattern.yaml")
+	if err != nil {
+		t.Fatalf("failed to read config file")
+	}
+
+	_, err = backend.BuildConfigResponse(nil)
+	if err == nil {
+		t.Errorf("fail to catch improper pattern")
 	}
 }
 

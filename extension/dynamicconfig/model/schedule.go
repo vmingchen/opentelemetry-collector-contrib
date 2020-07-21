@@ -19,37 +19,48 @@
 package model
 
 import (
-	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 	"hash/fnv"
+
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 type Schedule struct {
 	InclusionPatterns []Pattern
 	ExclusionPatterns []Pattern
-	Period            CollectionPeriod
-	Metadata          []byte
+	PeriodSec         CollectionPeriod
 }
 
-func (schedule *Schedule) Proto() *pb.ConfigResponse_MetricConfig_Schedule {
-	incSlice := make([]*pb.ConfigResponse_MetricConfig_Schedule_Pattern, len(schedule.InclusionPatterns))
-	excSlice := make([]*pb.ConfigResponse_MetricConfig_Schedule_Pattern, len(schedule.ExclusionPatterns))
+func (schedule *Schedule) Proto() (*pb.MetricConfigResponse_Schedule, error) {
+	incSlice := make([]*pb.MetricConfigResponse_Schedule_Pattern, len(schedule.InclusionPatterns))
+	excSlice := make([]*pb.MetricConfigResponse_Schedule_Pattern, len(schedule.ExclusionPatterns))
 
+	var err error
 	for i, incPat := range schedule.InclusionPatterns {
-		incSlice[i] = incPat.Proto()
+		incSlice[i], err = incPat.Proto()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for i, excPat := range schedule.ExclusionPatterns {
-		excSlice[i] = excPat.Proto()
+		excSlice[i], err = excPat.Proto()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	proto := &pb.ConfigResponse_MetricConfig_Schedule{
+	periodProto, err := schedule.PeriodSec.Proto()
+	if err != nil {
+		return nil, err
+	}
+
+	proto := &pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: incSlice,
 		ExclusionPatterns: excSlice,
-		Period:            schedule.Period.Proto(),
-		Metadata:          schedule.Metadata,
+		PeriodSec:         periodProto,
 	}
 
-	return proto
+	return proto, nil
 }
 
 func (schedule *Schedule) Hash() []byte {
@@ -69,8 +80,7 @@ func (schedule *Schedule) Hash() []byte {
 		combineHash(incHashes),
 		[]byte("ExclusionPatterns"),
 		combineHash(excHashes),
-		schedule.Period.Hash(),
-		schedule.Metadata,
+		schedule.PeriodSec.Hash(),
 	}
 
 	hasher := fnv.New64a()
