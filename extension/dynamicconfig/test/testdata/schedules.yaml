@@ -1,6 +1,5 @@
 ConfigBlocks:
-    MetricConfig:
-        Schedules:
-        - InclusionPatterns:
-            - StartsWith: "*"
-          PeriodSec: SEC_5
+    Schedules:
+    - InclusionPatterns:
+        - StartsWith: "*"
+      Period: SEC_5

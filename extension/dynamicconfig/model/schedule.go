@@ -27,7 +27,7 @@ import (
 type Schedule struct {
 	InclusionPatterns []Pattern
 	ExclusionPatterns []Pattern
-	PeriodSec         CollectionPeriod
+	Period            CollectionPeriod
 }
 
 func (schedule *Schedule) Proto() (*pb.MetricConfigResponse_Schedule, error) {
@@ -49,7 +49,7 @@ func (schedule *Schedule) Proto() (*pb.MetricConfigResponse_Schedule, error) {
 		}
 	}
 
-	periodProto, err := schedule.PeriodSec.Proto()
+	periodProto, err := schedule.Period.Proto()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (schedule *Schedule) Hash() []byte {
 		combineHash(incHashes),
 		[]byte("ExclusionPatterns"),
 		combineHash(excHashes),
-		schedule.PeriodSec.Hash(),
+		schedule.Period.Hash(),
 	}
 
 	hasher := fnv.New64a()

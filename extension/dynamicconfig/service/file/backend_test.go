@@ -39,10 +39,10 @@ func TestNewFileConfig(t *testing.T) {
 func TestUpdateConfig(t *testing.T) {
 	originalSchedule := `ConfigBlocks:
     Schedules:
-        - PeriodSec: MIN_5`
+        - Period: MIN_5`
 	updatedSchedule := `ConfigBlocks:
     Schedules:
-        - PeriodSec: MIN_1`
+        - Period: MIN_1`
 
 	tmpfile := newTmpSchedule(t)
 	defer os.Remove(tmpfile.Name())
@@ -55,7 +55,7 @@ func TestUpdateConfig(t *testing.T) {
 	}
 	backend.updateCh = make(chan struct{})
 
-	if backend.configModel.ConfigBlocks[0].Schedules[0].PeriodSec != "MIN_5" {
+	if backend.configModel.ConfigBlocks[0].Schedules[0].Period != "MIN_5" {
 		t.Errorf("update incorrect: wanted Period=MIN_5, got Schedules: %v",
 			backend.configModel.ConfigBlocks[0])
 	}
@@ -65,7 +65,7 @@ func TestUpdateConfig(t *testing.T) {
 
 	select {
 	case <-backend.updateCh:
-		if backend.configModel.ConfigBlocks[0].Schedules[0].PeriodSec != "MIN_1" {
+		if backend.configModel.ConfigBlocks[0].Schedules[0].Period != "MIN_1" {
 			t.Errorf("update incorrect: wanted Period=MIN_1, got Schedules: %v",
 				backend.configModel.ConfigBlocks[0])
 		}

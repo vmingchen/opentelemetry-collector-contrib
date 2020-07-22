@@ -23,12 +23,12 @@ func TestAddConfigBlock(t *testing.T) {
 	configBlocks := []*ConfigBlock{
 		{
 			Schedules: []*Schedule{
-				{PeriodSec: "SEC_1"},
+				{Period: "SEC_1"},
 			},
 		},
 		{
 			Schedules: []*Schedule{
-				{PeriodSec: "SEC_5"}, {PeriodSec: "DAY_1"},
+				{Period: "SEC_5"}, {Period: "DAY_1"},
 			},
 		},
 		{
@@ -46,14 +46,14 @@ func TestAddConfigBlock(t *testing.T) {
 		t.Errorf("expected 3 schedules, found: %v", len(scheds))
 	}
 
-	if scheds[0].PeriodSec != "SEC_1" || scheds[1].PeriodSec != "SEC_5" || scheds[2].PeriodSec != "DAY_1" {
+	if scheds[0].Period != "SEC_1" || scheds[1].Period != "SEC_5" || scheds[2].Period != "DAY_1" {
 		t.Errorf("expected periods SEC_1, SEC_5, DAY_1, found: %v", scheds)
 	}
 }
 
 func TestConfigBlockProto(t *testing.T) {
 	config := ConfigBlock{
-		Schedules: []*Schedule{{PeriodSec: "MIN_5"}, {PeriodSec: "MIN_1"}},
+		Schedules: []*Schedule{{Period: "MIN_5"}, {Period: "MIN_1"}},
 	}
 
 	configProto, err := config.Proto()
@@ -65,21 +65,21 @@ func TestConfigBlockProto(t *testing.T) {
 func TestConfigBlockHash(t *testing.T) {
 	configA := ConfigBlock{
 		Schedules: []*Schedule{
-			{PeriodSec: "MIN_1"},
-			{PeriodSec: "MIN_5"},
+			{Period: "MIN_1"},
+			{Period: "MIN_5"},
 		},
 	}
 
 	configB := ConfigBlock{
 		Schedules: []*Schedule{
-			{PeriodSec: "MIN_5"},
-			{PeriodSec: "MIN_1"},
+			{Period: "MIN_5"},
+			{Period: "MIN_1"},
 		},
 	}
 
 	configC := ConfigBlock{
 		Schedules: []*Schedule{
-			{PeriodSec: "MIN_1"},
+			{Period: "MIN_1"},
 		},
 	}
 

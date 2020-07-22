@@ -73,7 +73,7 @@ func NewBackend(configFile string) (*Backend, error) {
 func (backend *Backend) updateConfig() error {
 	var configModel model.Config
 	if err := backend.viper.UnmarshalExact(&configModel); err != nil {
-		return fmt.Errorf("local backend failed to decode config: %w", err)
+		return fmt.Errorf("file backend failed to decode config: %w", err)
 	}
 
 	backend.mu.Lock()

@@ -1,12 +1,12 @@
 extensions:
     dynamicconfig:
         endpoint: 0.0.0.0:55700
-        local_config_file: 'testdata/schedules.yaml'
+        local_config_file: 'examples/dynamic-config/schedules.yaml'
 
 receivers:
     otlp:
         protocols:
-            http:
+            grpc:
                 # endpoint: 0.0.0.0:55680
 
 exporters:

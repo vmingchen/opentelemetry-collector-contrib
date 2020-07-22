@@ -6,8 +6,8 @@ ConfigBlocks:
                   Equals: "/cannot/have/both"
             ExclusionPatterns:
                 - Equals: "/do/not/collect"
-            PeriodSec: "MIN_5"
+            Period: "MIN_5"
 
           - InclusionPatterns:
                 - Equals: "/collect/every/week"
-            PeriodSec: "DAY_7"
+            Period: "DAY_7"

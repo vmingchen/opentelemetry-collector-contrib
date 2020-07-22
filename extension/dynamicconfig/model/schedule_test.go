@@ -23,7 +23,7 @@ func TestScheduleProto(t *testing.T) {
 	schedule := Schedule{
 		InclusionPatterns: []Pattern{Pattern{}, Pattern{}},
 		ExclusionPatterns: []Pattern{Pattern{}, Pattern{}},
-		PeriodSec:         "MIN_5",
+		Period:            "MIN_5",
 	}
 
 	p, err := schedule.Proto()

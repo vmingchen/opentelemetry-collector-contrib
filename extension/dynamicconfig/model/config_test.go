@@ -30,7 +30,7 @@ var config = Config{
 				"location:infirmary",
 			},
 			Schedules: []*Schedule{
-				{PeriodSec: "SEC_1"},
+				{Period: "SEC_1"},
 			},
 		},
 		{
@@ -38,13 +38,13 @@ var config = Config{
 				"status: 1",
 			},
 			Schedules: []*Schedule{
-				{PeriodSec: "SEC_5"},
+				{Period: "SEC_5"},
 			},
 		},
 		{
 			Resource: nil,
 			Schedules: []*Schedule{
-				{PeriodSec: "DAY_1"},
+				{Period: "DAY_1"},
 			},
 		},
 		{
@@ -52,7 +52,7 @@ var config = Config{
 				"status:0",
 			},
 			Schedules: []*Schedule{
-				{PeriodSec: "DAY_7"},
+				{Period: "DAY_7"},
 			},
 		},
 	},
@@ -75,7 +75,7 @@ func TestMatch(t *testing.T) {
 		t.Errorf("expected to have three schedules, got: %v", schedLen)
 	}
 
-	if scheds[0].PeriodSec != "SEC_1" || scheds[1].PeriodSec != "SEC_5" || scheds[2].PeriodSec != "DAY_1" {
+	if scheds[0].Period != "SEC_1" || scheds[1].Period != "SEC_5" || scheds[2].Period != "DAY_1" {
 		t.Errorf("expected periods to be SEC_1, SEC_5 and DAY_1 respectively, got schedules: %v", scheds)
 	}
 
@@ -98,7 +98,7 @@ func TestMatchEmptyResource(t *testing.T) {
 		t.Errorf("expected to have one schedule, got: %v", schedlen)
 	}
 
-	if scheds[0].PeriodSec != "DAY_1" {
+	if scheds[0].Period != "DAY_1" {
 		t.Errorf("expected period to be DAY_1, got: %v", scheds)
 	}
 
@@ -118,7 +118,7 @@ func TestMatchNilResource(t *testing.T) {
 		t.Errorf("expected to have one schedule, got: %v", schedlen)
 	}
 
-	if scheds[0].PeriodSec != "DAY_1" {
+	if scheds[0].Period != "DAY_1" {
 		t.Errorf("expected period to be DAY_1, got: %v", scheds)
 	}
 
@@ -142,7 +142,7 @@ func TestMatchNoResource(t *testing.T) {
 		t.Errorf("expected to have one schedule, got: %v", schedlen)
 	}
 
-	if scheds[0].PeriodSec != "DAY_1" {
+	if scheds[0].Period != "DAY_1" {
 		t.Errorf("expected period to be DAY_1, got: %v", scheds)
 	}
 

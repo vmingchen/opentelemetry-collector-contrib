@@ -31,18 +31,16 @@ import (
 
 var (
 	sec1Schedule = `ConfigBlocks:
-    MetricConfig:
-        Schedules:
-        - InclusionPatterns:
-            - StartsWith: "*"
-          PeriodSec: SEC_1`
+    Schedules:
+    - InclusionPatterns:
+        - StartsWith: "*"
+      Period: SEC_1`
 
 	sec5Schedule = `ConfigBlocks:
-    MetricConfig:
-        Schedules:
-        - InclusionPatterns:
-            - StartsWith: "*"
-          PeriodSec: SEC_5`
+    Schedules:
+    - InclusionPatterns:
+        - StartsWith: "*"
+      Period: SEC_5`
 )
 
 func startCollector(t *testing.T, configPath string, metricsAddr string) (*exec.Cmd, io.ReadCloser) {
