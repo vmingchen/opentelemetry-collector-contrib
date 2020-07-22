@@ -35,7 +35,7 @@ type Backend struct {
 	viper *viper.Viper
 
 	mu          sync.Mutex
-	configModel *model.Config
+	configModel *model.Config // protected by mutex
 
 	waitTime int32
 	updateCh chan struct{} // syncs updates; meant for testing

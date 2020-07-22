@@ -17,12 +17,14 @@ package model
 import (
 	"bytes"
 	"testing"
+
+	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
 func TestScheduleProto(t *testing.T) {
 	schedule := Schedule{
-		InclusionPatterns: []Pattern{Pattern{}, Pattern{}},
-		ExclusionPatterns: []Pattern{Pattern{}, Pattern{}},
+		InclusionPatterns: []Pattern{Pattern{Equals: "one"}, Pattern{StartsWith: "two"}},
+		ExclusionPatterns: []Pattern{Pattern{StartsWith: "three"}, Pattern{Equals: "four"}},
 		Period:            "MIN_5",
 	}
 
@@ -31,6 +33,14 @@ func TestScheduleProto(t *testing.T) {
 		len(p.ExclusionPatterns) != 2 ||
 		p.PeriodSec != 300 {
 		t.Errorf("improper conversion to proto")
+	}
+
+	if p.InclusionPatterns[0].Match.(*pb.MetricConfigResponse_Schedule_Pattern_Equals).Equals != "one" ||
+		p.InclusionPatterns[1].Match.(*pb.MetricConfigResponse_Schedule_Pattern_StartsWith).StartsWith != "two" ||
+		p.ExclusionPatterns[0].Match.(*pb.MetricConfigResponse_Schedule_Pattern_StartsWith).StartsWith != "three" ||
+		p.ExclusionPatterns[1].Match.(*pb.MetricConfigResponse_Schedule_Pattern_Equals).Equals != "four" {
+
+		t.Errorf("proto patterns incorrect: expected one, two, three, four, got: %v", schedule)
 	}
 }
 

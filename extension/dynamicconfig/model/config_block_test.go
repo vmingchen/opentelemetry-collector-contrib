@@ -56,9 +56,13 @@ func TestConfigBlockProto(t *testing.T) {
 		Schedules: []*Schedule{{Period: "MIN_5"}, {Period: "MIN_1"}},
 	}
 
-	configProto, err := config.Proto()
-	if err != nil || len(configProto) != 2 {
+	scheds, err := config.Proto()
+	if err != nil || len(scheds) != 2 {
 		t.Errorf("improper conversion to proto")
+	}
+
+	if scheds[0].PeriodSec != 300 || scheds[1].PeriodSec != 60 {
+		t.Errorf("expected periods 300 and 60, found: %v", scheds)
 	}
 }
 

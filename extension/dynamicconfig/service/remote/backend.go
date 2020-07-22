@@ -32,7 +32,7 @@ type Backend struct {
 	client              pb.MetricConfigClient
 
 	mu   sync.Mutex
-	resp *pb.MetricConfigResponse
+	resp *pb.MetricConfigResponse // protected by mutex
 }
 
 func NewBackend(remoteConfigAddress string) (*Backend, error) {

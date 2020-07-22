@@ -25,6 +25,11 @@ import (
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
+// Pattern is a matching rule for determining which metrics correspond to
+// a given schedule. Using the field Equals implies that the string should
+// match a metric name exactly. Using the field StartsWith implies that the
+// string should be a prefix match to one or more metrics. A Pattern with
+// StartsWith="*" is a special case that means match all metrics.
 type Pattern struct {
 	Equals     string
 	StartsWith string
