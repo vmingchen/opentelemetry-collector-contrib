@@ -14,5 +14,6 @@
 
 // Package dynamicconfig implements an extension that enables dynamically
 // configuring metric collection schedule, trace parameters, and other
-// tunable knobs on an instrumented system.
+// tunable knobs on an instrumented system. At the moment, only metric
+// collection schedules have been implemented.
 package dynamicconfig

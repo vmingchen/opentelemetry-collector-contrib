@@ -28,9 +28,9 @@ import (
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
-// file.Backend is a ConfigBackend that uses a local file to determine
-// what schedules to change. The file is read live, so changes to it will
-// reflect immediately in the configs.
+// A Backend is a ConfigBackend that uses a local file to determine what
+// schedules to change. The file is read live, so changes to it will reflect
+// immediately in the configs.
 type Backend struct {
 	viper *viper.Viper
 
@@ -83,6 +83,8 @@ func (backend *Backend) updateConfig() error {
 	return nil
 }
 
+// BuildConfigResponse builds a MetricConfigResponse based on the config data
+// and backend settings.
 func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.MetricConfigResponse, error) {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()

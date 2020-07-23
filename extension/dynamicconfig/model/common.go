@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Contains common models for the dynamic config service. The corresponding
-// Proto() methods convert the model representation to a usable struct for
-// protobuf marshalling.
 package model
 
 import (

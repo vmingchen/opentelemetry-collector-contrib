@@ -26,6 +26,8 @@ import (
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
+// A Backend is a ConfigBackend that communicates with an upstream config
+// service to obtain config data.
 type Backend struct {
 	remoteConfigAddress string
 	conn                *grpc.ClientConn
@@ -63,6 +65,8 @@ func (backend *Backend) initConn() error {
 	return nil
 }
 
+// BuildConfigResponse builds a MetricConfigResponse based on responses from the
+// upstream config server.
 func (backend *Backend) BuildConfigResponse(resource *res.Resource) (*pb.MetricConfigResponse, error) {
 	if err := backend.syncRemote(resource); err != nil {
 		return nil, fmt.Errorf("fail to build config resp: %w", err)
@@ -100,6 +104,7 @@ func (backend *Backend) syncRemote(resource *res.Resource) error {
 	return nil
 }
 
+// Close shuts down the connection to the upstream config server.
 func (backend *Backend) Close() error {
 	if err := backend.conn.Close(); err != nil {
 		return fmt.Errorf("remote config backend fail to close connection: %w", err)

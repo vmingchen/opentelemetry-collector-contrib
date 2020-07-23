@@ -35,6 +35,9 @@ type Pattern struct {
 	StartsWith string
 }
 
+// Proto converts the Pattern into a MetricConfigResponse_Schedule_Pattern
+// pointer. If both "Equals" and "StartsWith" are specified in the struct,
+// then an error is returned.
 func (p *Pattern) Proto() (*pb.MetricConfigResponse_Schedule_Pattern, error) {
 	if len(p.Equals) > 0 {
 		if len(p.StartsWith) > 0 {
@@ -55,6 +58,8 @@ func (p *Pattern) Proto() (*pb.MetricConfigResponse_Schedule_Pattern, error) {
 	}
 }
 
+// Hash computes an FNVa 64 bit hash of the Pattern. Two Patterns with the
+// same string value but in different fields will yield different hashes.
 func (p *Pattern) Hash() []byte {
 	hasher := fnv.New64a()
 

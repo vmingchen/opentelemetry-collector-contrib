@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package service implements the server side of the dynamic config service,
+// including a local, file-based backend and a remote backend.
 package service
 
 import (
@@ -38,11 +40,11 @@ type ConfigBackend interface {
 // updates.
 type ConfigService struct {
 	pb.UnimplementedMetricConfigServer // for forward compatability
-	backend                             ConfigBackend
+	backend                            ConfigBackend
 }
 
 func NewConfigService(opts ...Option) (*ConfigService, error) {
-	builder := &ServiceBuilder{}
+	builder := &serviceBuilder{}
 	for _, opt := range opts {
 		opt(builder)
 	}
@@ -55,7 +57,7 @@ func NewConfigService(opts ...Option) (*ConfigService, error) {
 	return &ConfigService{backend: backend}, nil
 }
 
-type ServiceBuilder struct {
+type serviceBuilder struct {
 	remoteConfigAddress string
 	filepath            string
 	waitTime            int32
@@ -65,7 +67,7 @@ type ServiceBuilder struct {
 	backend ConfigBackend
 }
 
-func (builder *ServiceBuilder) build() (ConfigBackend, error) {
+func (builder *serviceBuilder) build() (ConfigBackend, error) {
 	if builder.backend != nil {
 		return builder.backend, nil
 	}
@@ -96,33 +98,48 @@ func (builder *ServiceBuilder) build() (ConfigBackend, error) {
 	return nil, errors.New("missing backend specification")
 }
 
-type Option func(*ServiceBuilder)
+type Option func(*serviceBuilder)
 
+// WithRemoteConfig instantiates a ConfigService that uses a remote backend,
+// communicating with an upstream config service at the address sepcified
+// by remoteConfigAddress. If both WithRemoteConfig and WithFileConfig are
+// specified, WithRemoteConfig will take precedence and a remote backend will
+// be used.
 func WithRemoteConfig(remoteConfigAddress string) Option {
-	return func(builder *ServiceBuilder) {
+	return func(builder *serviceBuilder) {
 		builder.remoteConfigAddress = remoteConfigAddress
 	}
 }
 
-func WithLocalConfig(filepath string) Option {
-	return func(builder *ServiceBuilder) {
+// WithFileConfig instantiates a ConfigService that uses a local file backend
+// that monitors a file for configuration data.  If both WithRemoteConfig and
+// WithFileConfig are specified, WithRemoteConfig will take precedence and a
+// remote backend will be used.
+func WithFileConfig(filepath string) Option {
+	return func(builder *serviceBuilder) {
 		builder.filepath = filepath
 	}
 }
 
+// WithWaitTime specifies a suggested time for a client to wait before polling
+// the config service for updated configs. The default value is 30 seconds.
+// This options is only used with the local file backend. If specified when
+// using WithRemoteConfig, it will be ignored.
 func WithWaitTime(time int32) Option {
-	return func(builder *ServiceBuilder) {
+	return func(builder *serviceBuilder) {
 		builder.waitTime = time
 	}
 }
 
 // NOTE: intended for testing only!
 func WithMockBackend() Option {
-	return func(builder *ServiceBuilder) {
+	return func(builder *serviceBuilder) {
 		builder.backend = &mock.Backend{}
 	}
 }
 
+// GetMetricConfig is the server-size gRPC call that returns the metric schedules
+// corresponding to a particular MetricConfigRequest.
 func (service *ConfigService) GetMetricConfig(ctx context.Context, req *pb.MetricConfigRequest) (*pb.MetricConfigResponse, error) {
 	resp, err := service.backend.BuildConfigResponse(req.Resource)
 	if err != nil {
@@ -136,6 +153,8 @@ func (service *ConfigService) GetMetricConfig(ctx context.Context, req *pb.Metri
 	return resp, nil
 }
 
+// Stop cleans up all resources and connections, and stops the extension from
+// serving new MetricConfigRequests.
 func (service *ConfigService) Stop() error {
 	if service != nil {
 		if err := service.backend.Close(); err != nil {

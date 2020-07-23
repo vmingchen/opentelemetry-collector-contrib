@@ -35,11 +35,11 @@ func TestNewConfigService(t *testing.T) {
 }
 
 func TestLocalConfigOption(t *testing.T) {
-	if service, err := NewConfigService(WithLocalConfig("woot.yaml")); service != nil || err == nil {
+	if service, err := NewConfigService(WithFileConfig("woot.yaml")); service != nil || err == nil {
 		t.Errorf("file does not exist but service created: %v: %v", service, err)
 	}
 
-	service, err := NewConfigService(WithLocalConfig("../testdata/schedules.yaml"))
+	service, err := NewConfigService(WithFileConfig("../testdata/schedules.yaml"))
 	if service == nil || err != nil {
 		t.Errorf("file exists but service not created: %v: %v", service, err)
 	}
@@ -49,7 +49,7 @@ func TestWaitTimeConfigOption(t *testing.T) {
 	const testWaitTime = 60
 
 	service, err := NewConfigService(
-		WithLocalConfig("../testdata/schedules.yaml"),
+		WithFileConfig("../testdata/schedules.yaml"),
 		WithWaitTime(testWaitTime),
 	)
 	if service == nil || err != nil {

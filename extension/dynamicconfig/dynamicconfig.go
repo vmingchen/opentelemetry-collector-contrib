@@ -57,7 +57,7 @@ func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host
 		)
 	} else {
 		configService, err = service.NewConfigService(
-			service.WithLocalConfig(de.config.LocalConfigFile),
+			service.WithFileConfig(de.config.LocalConfigFile),
 			service.WithWaitTime(int32(de.config.WaitTime)),
 		)
 	}

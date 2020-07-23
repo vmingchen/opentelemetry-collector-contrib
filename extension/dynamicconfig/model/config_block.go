@@ -18,11 +18,18 @@ import (
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
+// A ConfigBlock associates a set of schedules with a resource. The resource
+// is represented as a list of strings. Each string takes the form "key:value",
+// where "key" and "value" are the string representations of the resource's
+// corresponding fields.
 type ConfigBlock struct {
 	Resource  []string
 	Schedules []*Schedule
 }
 
+// Proto converts the ConfigBlock into a slice of MetricConfigResponse_Schedule
+// pointers. There is no guarenteed order to the schedules in this slice, and
+// conflicting schedules may occur.
 func (block *ConfigBlock) Proto() ([]*pb.MetricConfigResponse_Schedule, error) {
 	scheduleSlice := make([]*pb.MetricConfigResponse_Schedule, len(block.Schedules))
 
@@ -37,6 +44,9 @@ func (block *ConfigBlock) Proto() ([]*pb.MetricConfigResponse_Schedule, error) {
 	return scheduleSlice, nil
 }
 
+// Hash calculates an FNVa 64 bit hash of the ConfigBlock. The ordering of the
+// schedules does not impact the hash. If there are no schedules, then
+// zero is returned.
 func (block *ConfigBlock) Hash() []byte {
 	if len(block.Schedules) == 0 {
 		return []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
@@ -50,6 +60,9 @@ func (block *ConfigBlock) Hash() []byte {
 	return combineHash(hashes)
 }
 
+// Add combines this ConfigBlock with another ConfigBlock. It does so by
+// concatenating the schedules of the two blocks, and does not attempt to
+// resolve potential conflicts.
 func (block *ConfigBlock) Add(other *ConfigBlock) {
 	block.Schedules = append(
 		block.Schedules,

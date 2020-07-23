@@ -24,12 +24,16 @@ import (
 	pb "github.com/open-telemetry/opentelemetry-proto/gen/go/experimental/metricconfigservice"
 )
 
+// A Schedules combines the inclusion and exclusion patterns matching a set
+// of metrics with the CollectionPeriod that should be applied to these
+// metrics.
 type Schedule struct {
 	InclusionPatterns []Pattern
 	ExclusionPatterns []Pattern
 	Period            CollectionPeriod
 }
 
+// Proto generates a MetricConfigResponse_Schedule pointer from the Schedule.
 func (schedule *Schedule) Proto() (*pb.MetricConfigResponse_Schedule, error) {
 	incSlice := make([]*pb.MetricConfigResponse_Schedule_Pattern, len(schedule.InclusionPatterns))
 	excSlice := make([]*pb.MetricConfigResponse_Schedule_Pattern, len(schedule.ExclusionPatterns))
@@ -63,6 +67,9 @@ func (schedule *Schedule) Proto() (*pb.MetricConfigResponse_Schedule, error) {
 	return proto, nil
 }
 
+// Hash computes and FNVa 64 bit hash of the Schedule. The order of rules
+// in InclusionPatterns and ExclusionPatterns do not impact the final hash, but
+// the same rules applied to different fields will yield different hashes.
 func (schedule *Schedule) Hash() []byte {
 	incHashes := make([][]byte, len(schedule.InclusionPatterns))
 	excHashes := make([][]byte, len(schedule.ExclusionPatterns))

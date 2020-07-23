@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package model contains data structures intended to be in-memory
+// representations of config information passed to a file backend. The data
+// from a "schedules.yaml" is parsed directly into the data structures.
+// The data structures include utilities for hashing and compiling their
+// data into protobufs.
 package model
 
 import (
@@ -22,6 +27,9 @@ import (
 	res "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 )
 
+// A Config collects together all the ConfigBlocks specified in a schedules.yaml.
+// It has the ability to generate a new ConfigBlock that contains the relevant
+// configuration data matching a particular resource (see Match).
 type Config struct {
 	ConfigBlocks []*ConfigBlock
 }
