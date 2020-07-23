@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package signalfxexporter
+package translation
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	"unicode"
 
 	metricspb "github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1"
-	sfxpb "github.com/signalfx/com_signalfx_metrics_protobuf"
+	sfxpb "github.com/signalfx/com_signalfx_metrics_protobuf/model"
 	"go.opentelemetry.io/collector/consumer/consumerdata"
 	"go.uber.org/zap"
 )
@@ -76,14 +76,29 @@ var (
 	infinityBoundSFxDimValue = float64ToDimValue(math.Inf(1))
 )
 
-func metricDataToSignalFxV2(
+func MetricDataToSignalFxV2(
+	logger *zap.Logger,
+	metricTranslator *MetricTranslator,
+	md consumerdata.MetricsData,
+) (sfxDataPoints []*sfxpb.DataPoint, numDroppedTimeSeries int) {
+	sfxDataPoints, numDroppedTimeSeries = metricDataToSfxDataPoints(logger, md)
+	if metricTranslator != nil {
+		sfxDataPoints = metricTranslator.TranslateDataPoints(logger, sfxDataPoints)
+	}
+	sanitizeDataPointDimensions(sfxDataPoints)
+	return
+}
+
+func metricDataToSfxDataPoints(
 	logger *zap.Logger,
 	md consumerdata.MetricsData,
-) (sfxDataPoints []*sfxpb.DataPoint, numDroppedTimeSeries int, err error) {
+) (sfxDataPoints []*sfxpb.DataPoint, numDroppedTimeSeries int) {
 
 	// The final number of data points is likely larger than len(md.Metrics)
 	// but at least that is expected.
 	sfxDataPoints = make([]*sfxpb.DataPoint, 0, len(md.Metrics))
+
+	var err error
 
 	// Labels from Node and Resource.
 	// TODO: Options to add lib, service name, etc as dimensions?
@@ -107,23 +122,18 @@ func metricDataToSignalFxV2(
 
 		// Build the fixed parts for this metrics from the descriptor.
 		descriptor := metric.MetricDescriptor
-		metricName := &descriptor.Name
+		metricName := descriptor.Name
 
 		metricType := fromOCMetricDescriptorToMetricType(descriptor.Type)
 		numLabels := len(descriptor.LabelKeys)
-		filteredLabelKeys := make([]*string, numLabels)
-		for i := 0; i < numLabels; i++ {
-			key := filterKeyChars(descriptor.LabelKeys[i].Key)
-			filteredLabelKeys[i] = &key
-		}
 
 		for _, series := range metric.Timeseries {
 			dimensions := make([]*sfxpb.Dimension, numLabels+numExtraDimensions)
 			copy(dimensions, extraDimensions)
 			for i := 0; i < numLabels; i++ {
 				dimension := &sfxpb.Dimension{
-					Key:   filteredLabelKeys[i],
-					Value: &series.LabelValues[i].Value,
+					Key:   descriptor.LabelKeys[i].Key,
+					Value: series.LabelValues[i].Value,
 				}
 				dimensions[numExtraDimensions+i] = dimension
 			}
@@ -140,17 +150,17 @@ func metricDataToSignalFxV2(
 					// github.com/signalfx/golib/sfxclient/httpsink.go
 					Metric:     metricName,
 					MetricType: metricType,
-					Timestamp:  &msec,
+					Timestamp:  msec,
 					Dimensions: dimensions,
 				}
 
 				switch pv := dp.Value.(type) {
 				case *metricspb.Point_Int64Value:
-					sfxDataPoint.Value = &sfxpb.Datum{IntValue: &pv.Int64Value}
+					sfxDataPoint.Value = sfxpb.Datum{IntValue: &pv.Int64Value}
 					sfxDataPoints = append(sfxDataPoints, sfxDataPoint)
 
 				case *metricspb.Point_DoubleValue:
-					sfxDataPoint.Value = &sfxpb.Datum{DoubleValue: &pv.DoubleValue}
+					sfxDataPoint.Value = sfxpb.Datum{DoubleValue: &pv.DoubleValue}
 					sfxDataPoints = append(sfxDataPoints, sfxDataPoint)
 
 				case *metricspb.Point_DistributionValue:
@@ -163,7 +173,7 @@ func metricDataToSignalFxV2(
 						logger.Warn(
 							"Timeseries for distribution metric dropped",
 							zap.Error(err),
-							zap.String("metric", *sfxDataPoint.Metric))
+							zap.String("metric", sfxDataPoint.Metric))
 					}
 				case *metricspb.Point_SummaryValue:
 					sfxDataPoints, err = appendSummaryValues(
@@ -175,20 +185,20 @@ func metricDataToSignalFxV2(
 						logger.Warn(
 							"Timeseries for summary metric dropped",
 							zap.Error(err),
-							zap.String("metric", *sfxDataPoint.Metric))
+							zap.String("metric", sfxDataPoint.Metric))
 					}
 				default:
 					numDroppedTimeSeries++
 					logger.Warn(
 						"Timeseries dropped to unexpected metric type",
-						zap.String("metric", *sfxDataPoint.Metric))
+						zap.String("metric", sfxDataPoint.Metric))
 				}
 
 			}
 		}
 	}
 
-	return sfxDataPoints, numDroppedTimeSeries, nil
+	return sfxDataPoints, numDroppedTimeSeries
 }
 
 func appendAttributesToDimensions(
@@ -197,11 +207,9 @@ func appendAttributesToDimensions(
 ) []*sfxpb.Dimension {
 
 	for k, v := range attribs {
-		dimKey := filterKeyChars(k)
-		dimVal := v
 		dim := &sfxpb.Dimension{
-			Key:   &dimKey,
-			Value: &dimVal,
+			Key:   k,
+			Value: v,
 		}
 		dimensions = append(dimensions, dim)
 	}
@@ -240,15 +248,15 @@ func appendDistributionValues(
 	// specifies the maximum value in that bucket. This metric specifies the
 	// number of events with a value that is less than or equal to the upper
 	// bound.
-	metricName := *sfxBaseDataPoint.Metric + "_bucket"
+	metricName := sfxBaseDataPoint.Metric + "_bucket"
 	explicitBuckets := distributionValue.BucketOptions.GetExplicit()
 	if explicitBuckets == nil {
 		return sfxDataPoints, fmt.Errorf(
 			"unknown bucket options type for metric %q",
-			*sfxBaseDataPoint.Metric)
+			sfxBaseDataPoint.Metric)
 	}
 	bounds := explicitBuckets.Bounds
-	sfxBounds := make([]*string, len(bounds)+1)
+	sfxBounds := make([]string, len(bounds)+1)
 	for i := 0; i < len(bounds); i++ {
 		sfxBounds[i] = float64ToDimValue(bounds[i])
 	}
@@ -261,16 +269,16 @@ func appendDistributionValues(
 		copy(bucketDimensions, sfxBaseDataPoint.Dimensions)
 
 		bucketDimensions[len(bucketDimensions)-1] = &sfxpb.Dimension{
-			Key:   &upperBoundDimensionKey,
+			Key:   upperBoundDimensionKey,
 			Value: sfxBounds[i],
 		}
 
 		bucketDP := *sfxBaseDataPoint
 		bucketDP.Dimensions = bucketDimensions
-		bucketDP.Metric = &metricName
+		bucketDP.Metric = metricName
 		bucketDP.MetricType = bucketMetricType
 		count := bucket.Count
-		bucketDP.Value = &sfxpb.Datum{IntValue: &count}
+		bucketDP.Value = sfxpb.Datum{IntValue: &count}
 
 		sfxDataPoints = append(sfxDataPoints, &bucketDP)
 	}
@@ -304,9 +312,9 @@ func appendSummaryValues(
 	if percentiles == nil {
 		return sfxDataPoints, fmt.Errorf(
 			"unknown percentiles values for summary metric %q",
-			*sfxBaseDataPoint.Metric)
+			sfxBaseDataPoint.Metric)
 	}
-	metricName := *sfxBaseDataPoint.Metric + "_quantile"
+	metricName := sfxBaseDataPoint.Metric + "_quantile"
 	for _, quantile := range percentiles {
 
 		// Adding the "quantile" dimension.
@@ -315,16 +323,16 @@ func appendSummaryValues(
 
 		// If a dimension "quantile" was already specified: the last one wins.
 		quantileDimensions[len(quantileDimensions)-1] = &sfxpb.Dimension{
-			Key:   &quantileDimensionKey,
+			Key:   quantileDimensionKey,
 			Value: float64ToDimValue(quantile.Percentile),
 		}
 
 		quantileDP := *sfxBaseDataPoint
 		quantileDP.Dimensions = quantileDimensions
-		quantileDP.Metric = &metricName
+		quantileDP.Metric = metricName
 		quantileDP.MetricType = quantileMetricType
 		value := quantile.Value
-		quantileDP.Value = &sfxpb.Datum{DoubleValue: &value}
+		quantileDP.Value = sfxpb.Datum{DoubleValue: &value}
 
 		sfxDataPoints = append(sfxDataPoints, &quantileDP)
 	}
@@ -353,10 +361,10 @@ func buildTotalDataPoint(
 ) *sfxpb.DataPoint {
 
 	totalCountDP := *sfxBaseDataPoint
-	totalCountName := *sfxBaseDataPoint.Metric + "_count"
-	totalCountDP.Metric = &totalCountName
+	totalCountName := sfxBaseDataPoint.Metric + "_count"
+	totalCountDP.Metric = totalCountName
 	totalCountDP.MetricType = totalCountMetricType
-	totalCountDP.Value = &sfxpb.Datum{IntValue: count}
+	totalCountDP.Value = sfxpb.Datum{IntValue: count}
 
 	return &totalCountDP
 }
@@ -368,9 +376,19 @@ func buildSumDataPoint(
 
 	sumDP := *sfxBaseDataPoint
 	sumDP.MetricType = sumMetricType
-	sumDP.Value = &sfxpb.Datum{DoubleValue: sum}
+	sumDP.Value = sfxpb.Datum{DoubleValue: sum}
 
 	return &sumDP
+}
+
+// sanitizeDataPointLabels replaces all characters unsupported by SignalFx backend
+// in metric label keys and with "_"
+func sanitizeDataPointDimensions(dps []*sfxpb.DataPoint) {
+	for _, dp := range dps {
+		for _, d := range dp.Dimensions {
+			d.Key = filterKeyChars(d.Key)
+		}
+	}
 }
 
 func filterKeyChars(str string) string {
@@ -384,13 +402,12 @@ func filterKeyChars(str string) string {
 	return strings.Map(filterMap, str)
 }
 
-func float64ToDimValue(f float64) *string {
+func float64ToDimValue(f float64) string {
 	// Parameters below are the same used by Prometheus
 	// see https://github.com/prometheus/common/blob/b5fe7d854c42dc7842e48d1ca58f60feae09d77b/expfmt/text_create.go#L450
 	// SignalFx agent uses a different pattern
 	// https://github.com/signalfx/signalfx-agent/blob/5779a3de0c9861fa07316fd11b3c4ff38c0d78f0/internal/monitors/prometheusexporter/conversion.go#L77
 	// The important issue here is consistency with the exporter, opting for the
 	// more common one used by Prometheus.
-	str := strconv.FormatFloat(f, 'g', -1, 64)
-	return &str
+	return strconv.FormatFloat(f, 'g', -1, 64)
 }
