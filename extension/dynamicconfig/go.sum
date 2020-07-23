@@ -1173,6 +1173,8 @@ github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098 h1
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200707164106-b68642716098/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200716191220-7eb25882f08b h1:uvvdDsCGxD6tSJ58rgQ9nhivTQhKxI8y5354Y+4ZXrM=
 github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200716191220-7eb25882f08b/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
+github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200723162711-4d9deb60f0e2 h1:wHowIOs4y4IqhFmbz/lLMbFIoX5tvdNE17s0yDbMbwA=
+github.com/vmingchen/opentelemetry-proto v0.3.1-0.20200723162711-4d9deb60f0e2/go.mod h1:L2ZI0c8uiqieH8UtekYdPKK1B4MKAdplt46DUjTilK4=
 github.com/wadey/gocovmerge v0.0.0-20160331181800-b5bfa59ec0ad/go.mod h1:Hy8o65+MXnS6EwGElrSRjUzQDLXreJlzYLlWiHtt8hM=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
