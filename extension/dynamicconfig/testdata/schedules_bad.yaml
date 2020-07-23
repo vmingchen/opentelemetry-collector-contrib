@@ -1,7 +1,7 @@
 ConfigBlocks:
     - Resource:
       Schedules:
-          - InclusionPattern:
+          - InclusionPattern: # should be plural "InclusionPatterns"
                 - StartsWith: "/missing/s"
             ExclusionPatterns:
                 - Equals: "/do/not/collect"

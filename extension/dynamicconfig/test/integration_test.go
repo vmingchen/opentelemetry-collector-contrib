@@ -21,7 +21,6 @@ import (
 	"testing"
 )
 
-// TODO: double check build target works
 func TestIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Log("warning: not recompiling binaries: omit -short flag to compile new binaries")

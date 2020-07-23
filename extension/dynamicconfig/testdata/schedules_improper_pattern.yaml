@@ -3,7 +3,7 @@ ConfigBlocks:
       Schedules:
           - InclusionPatterns:
                 - StartsWith: "*"
-                  Equals: "/cannot/have/both"
+                  Equals: "/cannot/have/both" # must choose only "StartsWith" or "Equals"
             ExclusionPatterns:
                 - Equals: "/do/not/collect"
             Period: "MIN_5"

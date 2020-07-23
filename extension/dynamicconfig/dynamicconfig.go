@@ -43,7 +43,6 @@ func newServer(config Config, logger *zap.Logger) (*dynamicConfigExtension, erro
 	return de, nil
 }
 
-// TODO: debug ReportFatalError hanging
 func (de *dynamicConfigExtension) Start(ctx context.Context, host component.Host) error {
 	de.logger.Info("Starting dynamic config extension", zap.Any("config", de.config))
 	listen, err := net.Listen("tcp", de.config.Endpoint)

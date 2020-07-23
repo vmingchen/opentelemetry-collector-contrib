@@ -27,6 +27,8 @@ import (
 
 type CollectionPeriod string
 
+// TODO: check for library to parse time duration
+// TODO: consider how to open up the list of recommended periods for extension
 func (period CollectionPeriod) Proto() (int32, error) {
 	switch period {
 	case "SEC_1":
